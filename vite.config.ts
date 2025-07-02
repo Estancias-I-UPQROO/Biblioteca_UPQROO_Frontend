@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
    server: {
     allowedHosts: [
-      'all', // tu host de ngrok
+      '6416-187-190-174-203.ngrok-free.app', // tu host de ngrok
       // puedes agregar más hosts aquí si quieres
     ],
   },
