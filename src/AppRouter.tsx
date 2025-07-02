@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "./layouts";
-import { LineamientosPage, BaseDeDatosPage, BibliotecasDigitalesPage, DiccionariosPage, EbooksPage, FilosofiaPage, InicioPage, NormasPage, RevistasElectronicasPage, AyudaPage } from "./pages";
+import { LineamientosPage, BaseDeDatosPage, BibliotecasDigitalesPage, DiccionariosPage, EbooksPage, 
+         FilosofiaPage,PrestamoEquipo, InicioPage, FormacionUsuarios, SugerenciasMaterial,
+         Renovacion, PrestamoMat, NormasPage, RevistasElectronicasPage, AyudaPage } from "./pages";
 
 export const AppRouter = () => {
     return (
@@ -17,6 +19,11 @@ export const AppRouter = () => {
                     <Route path="/normas" element={<NormasPage />} />
                     <Route path="/revistas-electronicas" element={<RevistasElectronicasPage />} />
                     <Route path="/ayuda" element={<AyudaPage />} />
+                    <Route path="/prestamo-material" element={<PrestamoMat />} />
+                    <Route path="/renovacion" element={<Renovacion />} />
+                    <Route path="/prestamo-equipo" element={<PrestamoEquipo />} />
+                    <Route path="/formacion-usuarios" element={<FormacionUsuarios />} />
+                    <Route path="/solicitud-compra" element={<SugerenciasMaterial />} />
                 </Route>
             </Routes>
         </BrowserRouter>
