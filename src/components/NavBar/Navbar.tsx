@@ -1,14 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -20,16 +24,34 @@ export const Navbar = () => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setActiveMenu(null);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearch(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
 
   const clearTimeout = () => {
     if (timeoutRef.current !== null) {
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Implementa tu lógica de búsqueda aquí
+      console.log("Buscando:", searchQuery);
+    }
+    setShowSearch(false);
   };
 
   // Estilos optimizados
@@ -168,7 +190,7 @@ export const Navbar = () => {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50" ref={menuRef}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center h-full">
+        <Link to="/" className="flex items-center h-full z-10">
           <img
             src="/public/Upqroo_Logo.png"
             alt="Logo"
@@ -176,55 +198,90 @@ export const Navbar = () => {
           />
         </Link>
 
-        <button
-          className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors duration-150"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-expanded={isMobileMenuOpen}
-          aria-label="Toggle navigation menu"
-        >
-          {isMobileMenuOpen ? (
-            <X className="w-6 h-6 text-gray-700" />
-          ) : (
-            <Menu className="w-6 h-6 text-gray-700" />
-          )}
-        </button>
+        {/* Contenedor de elementos del lado derecho */}
+        <div className="flex items-center gap-1"> {/* Cambiado space-x-4 a gap-1 para reducir espacio */}
+          {/* Barra de búsqueda minimalista para desktop */}
+          <div className="hidden md:block relative" ref={searchRef}>
+            {showSearch ? (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 200 }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white"
+              >
+                <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar..."
+                    className="w-full px-2 py-1 text-sm focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="text-orange-500 hover:text-orange-700 p-1"
+                  >
+                    <Search size={18} />
+                  </button>
+                </form>
+              </motion.div>
+            ) : (
+              <button
+                onClick={() => setShowSearch(true)}
+                className="p-1 text-gray-700 hover:text-orange-500 transition-colors duration-150"
+                aria-label="Buscar"
+              >
+                <Search size={20} />
+              </button>
+            )}
+          </div>
 
-        <div className="hidden md:flex items-center h-full space-x-1 text-sm font-medium">
-          <NavLink to="/" label="INICIO" />
-          <DesktopDropdown
-            menu="acerca de nosotros"
-            links={[
-              { to: "/filosofia", label: "Filosofía" },
-              { to: "/lineamientos", label: "Lineamientos" },
-            ]}
-          />
-          <DesktopDropdown
-            menu="servicios"
-            links={[
-              { to: "/prestamo-material", label: "Préstamo de material" },
-              { to: "/renovacion", label: "Renovación en línea" },
-              { to: "/prestamo-equipo", label: "Préstamo de equipo" },
-              { to: "/formacion-usuarios", label: "Formación de usuarios" },
-              { to: "/solicitud-compra", label: "Solicitud de material" },
-            ]}
-          />
-          <DesktopDropdown
-            menu="recursos electrónicos"
-            links={[
-              { to: "/base-de-datos", label: "Base de datos" },
-              { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
-              { to: "/revistas-electronicas", label: "Revistas electrónicas" },
-              { to: "/ebooks", label: "E-books" },
-              { to: "/diccionarios", label: "Diccionarios" },
-              { to: "/normas", label: "Normas y guías" },
-              { to: "/formacion-autodidacta", label: "Formación autodidacta" },
-            ]}
-          />
-          <NavLink to="/catalogo" label="CATÁLOGO" />
-          <NavLink to="/ayuda" label="AYUDA" />
+          {/* Menú de navegación para desktop */}
+          <div className="hidden md:flex items-center h-full text-sm font-medium ml-2"> {/* Añadido ml-2 */}
+            <NavLink to="/" label="INICIO" />
+            <DesktopDropdown
+              menu="acerca de nosotros"
+              links={[
+                { to: "/filosofia", label: "Filosofía" },
+                { to: "/lineamientos", label: "Lineamientos" },
+              ]}
+            />
+            <NavLink to="/servicios" label="SERVICIOS" />
+            <DesktopDropdown
+              menu="recursos electrónicos"
+              links={[
+                { to: "/base-de-datos", label: "Base de datos" },
+                { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
+                { to: "/revistas-electronicas", label: "Revistas electrónicas" },
+                { to: "/ebooks", label: "E-books" },
+                { to: "/diccionarios", label: "Diccionarios" },
+                { to: "/normas", label: "Normas y guías" },
+                { to: "/formacion-autodidacta", label: "Formación autodidacta" },
+              ]}
+            />
+            <NavLink to="/catalogo" label="CATÁLOGO" />
+            <NavLink to="/ayuda" label="AYUDA" />
+          </div>
+
+          {/* Botón de menú hamburguesa para móvil */}
+          <button
+            className="md:hidden p-1 hover:bg-gray-100 transition-colors duration-150"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-expanded={isMobileMenuOpen}
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6 text-gray-700" />
+            ) : (
+              <Menu className="w-6 h-6 text-gray-700" />
+            )}
+          </button>
         </div>
       </div>
 
+      {/* Menú móvil (permanece igual) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -234,6 +291,23 @@ export const Navbar = () => {
             transition={{ duration: 0.2 }}
             className="md:hidden bg-white border-t border-gray-200 px-4 pt-2 pb-4 space-y-2 overflow-hidden"
           >
+            {/* Barra de búsqueda para móvil */}
+            <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500 mb-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar..."
+                className="w-full px-2 py-1 text-sm focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="text-orange-500 hover:text-orange-700 p-1"
+              >
+                <Search size={18} />
+              </button>
+            </form>
+
             <NavLink to="/" label="INICIO" />
             <MobileDropdown
               menu="acerca de nosotros"
@@ -242,20 +316,11 @@ export const Navbar = () => {
                 { to: "/lineamientos", label: "Lineamientos" },
               ]}
             />
-            <MobileDropdown
-              menu="servicios"
-              links={[
-                { to: "/prestamo-material", label: "Préstamo de material" },
-                { to: "/renovacion", label: "Renovación en línea" },
-                { to: "/prestamo-equipo", label: "Préstamo de equipo" },
-                { to: "/formacion-usuarios", label: "Formación de usuarios" },
-                { to: "/solicitud-compra", label: "Solicitud de material" },
-              ]}
-            />
+            <NavLink to="/servicios" label="SERVICIOS" />
             <MobileDropdown
               menu="recursos electrónicos"
               links={[
-                { to: "/base-de-datos", label: "Base de datos" }, 
+                { to: "/base-de-datos", label: "Base de datos" },
                 { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
                 { to: "/revistas-electronicas", label: "Revistas electrónicas" },
                 { to: "/ebooks", label: "E-books" },
@@ -271,4 +336,4 @@ export const Navbar = () => {
       </AnimatePresence>
     </nav>
   );
-}
+};
