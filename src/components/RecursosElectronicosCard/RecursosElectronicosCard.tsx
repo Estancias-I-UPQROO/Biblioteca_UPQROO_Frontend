@@ -25,7 +25,7 @@ export const RecursosElectronicosCard = ({ title, description, image, siteLink }
           className={`recursos-card-image ${isHovered ? 'blur-sm brightness-75' : 'brightness-90'}`}
           loading="lazy"
         />
-        
+         
         {/* Título siempre visible sobre la imagen */}
         <div className="recursos-card-title-overlay">
           <h2 className="recursos-card-title">{title}</h2>

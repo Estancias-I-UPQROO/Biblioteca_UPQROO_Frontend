@@ -104,33 +104,34 @@ export const InicioPage = () => {
 
   // Configuración para el carrusel de eventos
   const settingsJustinMind = {
-    infinite: true,
-    speed: 500,
-    slidesToShow: windowWidth > 768 ? 3 : 2,
-    slidesToScroll: 1,
-    arrows: true,
-    dots: false,
-    draggable: windowWidth <= 768,
-    swipe: windowWidth <= 768,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          draggable: true,
-          swipe: true,
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          draggable: true,
-          swipe: true,
-        }
+  infinite: true,
+  speed: 500,
+  slidesToShow: windowWidth > 768 ? 3 : 2,
+  slidesToScroll: 1,
+  arrows: true,
+  dots: false,
+  draggable: true, // Siempre activo para arrastrar
+  swipe: true, // Siempre activo para deslizar
+  touchThreshold: 10, // Sensibilidad del touch
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        slidesToShow: 2,
+        draggable: true,
+        swipe: true,
       }
-    ]
-  };
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        slidesToShow: 1,
+        draggable: true,
+        swipe: true,
+      }
+    }
+  ]
+};
 const abrirModal = (evento: Evento) => {
     setEventoSeleccionado(evento);
     setImagenActual(evento.imagen); // Establece la imagen principal inicialmente
