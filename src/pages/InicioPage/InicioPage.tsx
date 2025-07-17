@@ -8,7 +8,10 @@ interface Evento {
   id: number;
   imagen: string;
   titulo: string;
-  descripcion: string; // Añadimos descripción para el modal
+  descripcion: string;
+  imagenesAdicionales?: {
+    [key: string]: string;
+  };
 }
 
 export const InicioPage = () => {
@@ -71,9 +74,10 @@ export const InicioPage = () => {
     }
   ];
 
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+ const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(null);
+  const [imagenActual, setImagenActual] = useState<string | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -100,44 +104,51 @@ export const InicioPage = () => {
 
   // Configuración para el carrusel de eventos
   const settingsJustinMind = {
-    infinite: true,
-    speed: 500,
-    slidesToShow: windowWidth > 768 ? 3 : 2,
-    slidesToScroll: 1,
-    arrows: true,
-    dots: false,
-    draggable: windowWidth <= 768,
-    swipe: windowWidth <= 768,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          draggable: true,
-          swipe: true,
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          draggable: true,
-          swipe: true,
-        }
+  infinite: true,
+  speed: 500,
+  slidesToShow: windowWidth > 768 ? 3 : 2,
+  slidesToScroll: 1,
+  arrows: true,
+  dots: false,
+  draggable: true, // Siempre activo para arrastrar
+  swipe: true, // Siempre activo para deslizar
+  touchThreshold: 10, // Sensibilidad del touch
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        slidesToShow: 2,
+        draggable: true,
+        swipe: true,
       }
-    ]
-  };
-
-  const abrirModal = (evento: Evento) => {
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        slidesToShow: 1,
+        draggable: true,
+        swipe: true,
+      }
+    }
+  ]
+};
+const abrirModal = (evento: Evento) => {
     setEventoSeleccionado(evento);
+    setImagenActual(evento.imagen); // Establece la imagen principal inicialmente
     setModalAbierto(true);
   };
 
   const cerrarModal = () => {
     setModalAbierto(false);
     setEventoSeleccionado(null);
+    setImagenActual(null);
   };
 
+  const cambiarImagen = (nuevaImagen: string) => {
+    setImagenActual(nuevaImagen);
+  };
+
+ 
   return (
     <div className="inicio-container">
       {/* Hero Banner */}
@@ -182,14 +193,41 @@ export const InicioPage = () => {
             <button className="modal-cerrar" onClick={cerrarModal}>
               &times;
             </button>
-            <img 
-              src={eventoSeleccionado.imagen} 
-              alt={eventoSeleccionado.titulo} 
-              className="modal-imagen"
-            />
+            
+            <div className="modal-imagen-container">
+              <img 
+                src={imagenActual || eventoSeleccionado.imagen} 
+                alt={eventoSeleccionado.titulo} 
+                className="modal-imagen-fullscreen"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.querySelector('.modal-imagen-fullscreen')?.classList.toggle('fullscreen-active');
+                }}
+              />
+            </div>
+            
             <div className="modal-texto">
               <h3>{eventoSeleccionado.titulo}</h3>
               <p>{eventoSeleccionado.descripcion}</p>
+              
+              {/* Botones dinámicos para cambiar imágenes */}
+              {eventoSeleccionado.imagenesAdicionales && (
+                <div className="botones-imagenes">
+                  {Object.entries(eventoSeleccionado.imagenesAdicionales).map(([mes, url]) => (
+                    <button
+                      key={mes}
+                      className={`imagen-boton ${imagenActual === url ? 'activo' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cambiarImagen(url);
+                      }}
+                    >
+                      {mes.charAt(0).toUpperCase() + mes.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
               <button className="modal-boton">Más información</button>
             </div>
           </div>

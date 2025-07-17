@@ -21,11 +21,15 @@ export const LineamientosPage = () => {
 
   return (
     <>
-      <PageHeader>Lineamientos</PageHeader>
+     
       <div className="intro-section">
+        <PageHeader>Lineamientos</PageHeader>
         <div className="intro-split better-layout">
+          
           <div className="intro-text centered-text">
+            
             <div>
+               
               <p>
                 Los lineamientos de la biblioteca son el conjunto de normas, políticas y procedimientos que rigen el funcionamiento y uso de los espacios, recursos y servicios de la institución.
               </p>
