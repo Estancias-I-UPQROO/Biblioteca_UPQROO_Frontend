@@ -189,49 +189,48 @@ const abrirModal = (evento: Evento) => {
       {/* Modal para mostrar detalles del evento */}
       {modalAbierto && eventoSeleccionado && (
         <div className="modal-overlay" onClick={cerrarModal}>
-          <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-cerrar" onClick={cerrarModal}>
-              &times;
+  <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
+    <button className="modal-cerrar" onClick={cerrarModal}>&times;</button>
+
+    {/* Imagen arriba */}
+    <div className="modal-imagen-container">
+      <img
+        src={imagenActual || eventoSeleccionado.imagen}
+        alt={eventoSeleccionado.titulo}
+        className="modal-imagen-fullscreen"
+        onClick={(e) => {
+          e.stopPropagation();
+          document.querySelector('.modal-imagen-fullscreen')?.classList.toggle('fullscreen-active');
+        }}
+      />
+    </div>
+
+    {/* Fondo blanco para texto + botón */}
+    <div className="modal-texto">
+      <h3>{eventoSeleccionado.titulo}</h3>
+      <p>{eventoSeleccionado.descripcion}</p>
+
+      {eventoSeleccionado.imagenesAdicionales && (
+        <div className="botones-imagenes">
+          {Object.entries(eventoSeleccionado.imagenesAdicionales).map(([mes, url]) => (
+            <button
+              key={mes}
+              className={`imagen-boton ${imagenActual === url ? 'activo' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                cambiarImagen(url);
+              }}
+            >
+              {mes.charAt(0).toUpperCase() + mes.slice(1)}
             </button>
-            
-            <div className="modal-imagen-container">
-              <img 
-                src={imagenActual || eventoSeleccionado.imagen} 
-                alt={eventoSeleccionado.titulo} 
-                className="modal-imagen-fullscreen"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  document.querySelector('.modal-imagen-fullscreen')?.classList.toggle('fullscreen-active');
-                }}
-              />
-            </div>
-            
-            <div className="modal-texto">
-              <h3>{eventoSeleccionado.titulo}</h3>
-              <p>{eventoSeleccionado.descripcion}</p>
-              
-              {/* Botones dinámicos para cambiar imágenes */}
-              {eventoSeleccionado.imagenesAdicionales && (
-                <div className="botones-imagenes">
-                  {Object.entries(eventoSeleccionado.imagenesAdicionales).map(([mes, url]) => (
-                    <button
-                      key={mes}
-                      className={`imagen-boton ${imagenActual === url ? 'activo' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        cambiarImagen(url);
-                      }}
-                    >
-                      {mes.charAt(0).toUpperCase() + mes.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              )}
-              
-              <button className="modal-boton">Más información</button>
-            </div>
-          </div>
+          ))}
         </div>
+      )}
+
+      <button className="modal-boton">Más información</button>
+    </div>
+  </div>
+</div>
       )}
     </div>
   );

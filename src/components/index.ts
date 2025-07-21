@@ -5,4 +5,4 @@ export { Navbar } from "./Navbar/Navbar";
 export { RedesSociales } from "./RedesSociales/RedesSociales";
 export { PageContainer } from "./PageContainer/PageContainer";
 export { PageHeader } from "./PageHeader/PageHeader";
-export { ContactFloat } from "./Contact/ContactFloat";
+export { LibraryAssistant } from "./LibraryAssistant/LibraryAssistant";

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom"
-import { Footer, Navbar, RedesSociales, ContactFloat } from "../../components"
+import { Footer, Navbar, RedesSociales, LibraryAssistant } from "../../components"
 
 export const MainLayout = () => {
     return (
@@ -16,7 +16,7 @@ export const MainLayout = () => {
                     { id: '5', nombre: 'Tiktok', icono: 'fa-tiktok', link: 'https://www.tiktok.com/@upqroo' },
                 ]}
             />
-            <ContactFloat />
+            <LibraryAssistant />
             <Footer />
         </>
     )

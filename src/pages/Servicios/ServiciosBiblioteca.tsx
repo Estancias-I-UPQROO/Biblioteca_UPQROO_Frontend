@@ -96,7 +96,7 @@ const cards = [
     title: 'Préstamo de equipo de cómputo',
     description: (
       <>
-        <p>Apoyo a la comunidad académica mediante préstamo de laptops para fines académicos.</p>
+        <p>Apoyo a la comunidad académica mediante préstamo de computadoras para fines académicos.</p>
         <p>El registro debe realizarse en la bitácora.</p>
       </>
     ),
