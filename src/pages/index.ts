@@ -11,3 +11,4 @@ export { AyudaPage } from "./Ayuda/AyudaPage";
 export { Renovacion } from "./Servicios/Renovacion/Renovacion";
 export { SugerenciasMaterial } from "./Servicios/Solicitud-Compra/Solicitud-Compra";
 export { ServiciosBiblioteca } from "./Servicios/ServiciosBiblioteca";
+export { Catalogo } from "./Catalogo/Catalogo";

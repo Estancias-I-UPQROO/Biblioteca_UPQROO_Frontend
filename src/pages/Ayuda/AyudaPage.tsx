@@ -26,7 +26,7 @@ export const AyudaPage = () => {
       downloadName: "manual-usuario-biblioteca.pdf"
     },
     {
-      title: "Guía de Acceso de VS PHE",
+      title: "Guía de Acceso a Pearson Higher Education",
       file: "/Guia_acceso_PHE.pdf",
       downloadName: "guia-rapida-biblioteca.pdf"
     }

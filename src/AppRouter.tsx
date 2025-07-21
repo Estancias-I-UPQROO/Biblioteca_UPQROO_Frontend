@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "./layouts";
 import { LineamientosPage, BaseDeDatosPage, BibliotecasDigitalesPage, DiccionariosPage, EbooksPage, 
          FilosofiaPage, InicioPage, SugerenciasMaterial,
-         Renovacion, NormasPage, RevistasElectronicasPage, AyudaPage, ServiciosBiblioteca } from "./pages";
+         Renovacion, NormasPage, RevistasElectronicasPage, AyudaPage, ServiciosBiblioteca, Catalogo } from "./pages";
 
 export const AppRouter = () => {
     return (
@@ -19,7 +19,7 @@ export const AppRouter = () => {
                     <Route path="/normas" element={<NormasPage />} />
                     <Route path="/revistas-electronicas" element={<RevistasElectronicasPage />} />
                     <Route path="/ayuda" element={<AyudaPage />} />
-                    <Route path="/catalogo" element={<ServiciosBiblioteca />} />
+                    <Route path="/catalogo" element={< Catalogo />} />
                     <Route path="/servicios" element={<ServiciosBiblioteca />} />
                     <Route path="/renovacion" element={<Renovacion />} />
                     <Route path="/solicitud-compra" element={<SugerenciasMaterial />} />

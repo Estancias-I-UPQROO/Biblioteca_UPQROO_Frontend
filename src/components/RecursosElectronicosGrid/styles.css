@@ -283,6 +283,12 @@
     grid-template-columns: repeat(3, 1fr); /* 3 columnas en tablet */
   }
 }
+.recursos-grid {
+  display: grid;
+  gap: 2rem;
+  /* Cambiamos a repeat(3, 1fr) para forzar 3 columnas en desktop */
+  grid-template-columns: repeat(3, 1fr);
+}
 
 @media (max-width: 480px) {
   .recursos-grid-container {
@@ -294,28 +300,13 @@
     padding: 0.75rem 0.5rem;
   }
 }
-/* Responsive */
-@media (max-width: 768px) {
-  .recursos-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columnas en móvil */
-    gap: 1rem;
-  }
+
   
   .recursos-card {
     aspect-ratio: 1 / 1;
   }
   
-  .recursos-card-title {
-    font-size: 1rem;
-    padding: 1rem 0.5rem;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  .recursos-grid {
-    grid-template-columns: repeat(3, 1fr); /* 3 columnas en tablet */
-  }
-}
+ 
 
 @media (max-width: 480px) {
   .recursos-grid-container {
@@ -326,4 +317,4 @@
     font-size: 0.9rem;
     padding: 0.75rem 0.5rem;
   }
-}
+} 

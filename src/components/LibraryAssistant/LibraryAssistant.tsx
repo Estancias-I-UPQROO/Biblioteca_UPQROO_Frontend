@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FaComment, FaTimes, FaBook, FaSearch, FaQuestionCircle, FaInfoCircle } from 'react-icons/fa';
-import './ContactFloat.css';
+import { FaComment, FaTimes, FaBook, FaSearch, FaQuestionCircle, FaInfoCircle, FaPaperPlane } from 'react-icons/fa';
+import './LibraryAssistant.css';
 
-export const ContactFloat = () => {
+export const LibraryAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -12,24 +12,27 @@ export const ContactFloat = () => {
     { text: 'Horario de atención', icon: <FaInfoCircle /> },
     { text: 'Cómo buscar un libro', icon: <FaSearch /> },
     { text: 'Reglas de préstamo', icon: <FaBook /> },
-    { text: 'Contactar al bibliotecario', icon: <FaQuestionCircle /> }
+    { text: 'Contactar al bibliotecario', icon: <FaQuestionCircle /> },
+    { text: 'Recursos electrónicos', icon: <FaBook /> },
+    { text: 'Renovación en línea', icon: <FaBook /> }
   ];
 
   const botResponses: Record<string, string> = {
-    'horario de atención': 'La biblioteca está abierta de lunes a viernes de 8:00 am a 8:00 pm y los sábados de 9:00 am a 2:00 pm.',
-    'cómo buscar un libro': 'Puedes buscar libros por título, autor o materia en nuestro catálogo en línea. ¿Necesitas ayuda con algo específico?',
-    'reglas de préstamo': 'Los libros se prestan por 15 días renovables. Se permite un máximo de 3 libros por usuario. Hay multas por retraso en la devolución.',
-    'contactar al bibliotecario': 'Puedes enviar un correo a biblioteca@upqroo.edu.mx o visitar la mesa de referencia en el primer piso.'
+    'horario de atención': 'Horario de atención:\nLun-Vie: 09:00 a.m. - 14:00 p.m. / 17:00 p.m. - 20:00 p.m.\nSáb-Dom: Cerrado',
+    'cómo buscar un libro': 'Puedes buscar en nuestro catálogo en línea: https://siabuc.ucol.mx/upqroo\nO visita la sección de ayuda para guías detalladas.',
+    'reglas de préstamo': 'Préstamo de material:\n- Hasta 3 libros por 3 días\n- 2 renovaciones posibles\n- Renovación debe hacerse el día de vencimiento',
+    'contactar al bibliotecario': 'Contáctanos:\n📞 998 283 1859\n✉️ biblioteca@upqroo.edu.mx\n📍 Smza. 255, Mza. 11, Lote 1119-33, 77500 Cancún',
+    'recursos electrónicos': 'Recursos disponibles:\n• Base de datos\n• Bibliotecas digitales\n• Revistas electrónicas\n• E-books\n• Diccionarios\n• Normas y guías\n• Formación autodidacta',
+    'renovación en línea': 'Para renovar tus préstamos en línea, visita nuestro sistema de gestión o contacta al bibliotecario para asistencia.'
   };
 
   useEffect(() => {
     if (!isOpen) return;
     
-    // Mensaje inicial del bot
     if (messages.length === 0) {
       setTimeout(() => {
         setMessages([{ 
-          text: '¡Hola! Soy tu asistente de la biblioteca. ¿En qué puedo ayudarte hoy?', 
+          text: '¡Hola! Soy el asistente de la Biblioteca Virtual Kaxáant. ¿En qué puedo ayudarte hoy?', 
           isUser: false 
         }]);
       }, 500);
@@ -40,17 +43,14 @@ export const ContactFloat = () => {
     const messageToSend = text || inputMessage;
     if (!messageToSend.trim()) return;
 
-    // Agregar mensaje del usuario
     setMessages(prev => [...prev, { text: messageToSend, isUser: true }]);
     setInputMessage('');
     setIsTyping(true);
 
-    // Simular respuesta del bot después de un breve retraso
     setTimeout(() => {
       const lowerMessage = messageToSend.toLowerCase();
-      let response = 'Lo siento, no entendí tu pregunta. ¿Puedes reformularla o elegir una de estas opciones?';
+      let response = 'Puedo ayudarte con:\n- Horarios\n- Préstamos\n- Recursos\n- Contacto\n\nElige una opción o escribe tu pregunta.';
       
-      // Buscar una respuesta coincidente
       for (const key in botResponses) {
         if (lowerMessage.includes(key)) {
           response = botResponses[key];
@@ -60,44 +60,42 @@ export const ContactFloat = () => {
 
       setMessages(prev => [...prev, { text: response, isUser: false }]);
       setIsTyping(false);
-    }, 1000);
+    }, 1000 + Math.random() * 1000); // Retraso variable para parecer más natural
   };
-
+ 
   const handleQuickOption = (option: string) => {
     handleSendMessage(option);
   };
 
   return (
     <div className="assistant-container">
-      {/* Botón flotante principal */}
       <button 
         className="assistant-btn"
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Cerrar asistente" : "Abrir asistente virtual"}
       >
-        {isOpen ? <FaTimes /> : <FaComment />}
+        {isOpen ? <FaTimes size={24} /> : <FaComment size={24} />}
       </button>
 
-      {/* Interfaz del chat */}
       {isOpen && (
         <div className="assistant-chat">
           <div className="chat-header">
-            <h3>Asistente de la Biblioteca</h3>
+            <h3>Asistente Biblioteca Kaxáant</h3>
           </div>
           
           <div className="chat-messages">
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.isUser ? 'user' : 'bot'}`}>
-                {msg.text}
+                {msg.text.split('\n').map((line, i) => (
+                  <span key={i}>{line}<br/></span>
+                ))}
               </div>
             ))}
             {isTyping && (
-              <div className="message bot typing">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             )}
           </div>
@@ -127,7 +125,7 @@ export const ContactFloat = () => {
               onClick={() => handleSendMessage()}
               disabled={!inputMessage.trim()}
             >
-              <FaComment />
+              <FaPaperPlane size={16} />
             </button>
           </div>
         </div>
