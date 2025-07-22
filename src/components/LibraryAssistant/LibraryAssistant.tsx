@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaComment, FaTimes, FaBook, FaSearch, FaQuestionCircle, FaInfoCircle, FaPaperPlane } from 'react-icons/fa';
 import './LibraryAssistant.css';
 
@@ -7,35 +7,74 @@ export const LibraryAssistant = () => {
   const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Efecto para auto-scroll al fondo del chat
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Efecto para detectar clics fuera del chat
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && chatRef.current && !chatRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const quickOptions = [
-    { text: 'Horario de atención', icon: <FaInfoCircle /> },
-    { text: 'Cómo buscar un libro', icon: <FaSearch /> },
-    { text: 'Reglas de préstamo', icon: <FaBook /> },
-    { text: 'Contactar al bibliotecario', icon: <FaQuestionCircle /> },
-    { text: 'Recursos electrónicos', icon: <FaBook /> },
-    { text: 'Renovación en línea', icon: <FaBook /> }
+    { text: 'Consulta de horarios', icon: <FaInfoCircle /> },
+    { text: 'Búsqueda de libros', icon: <FaSearch /> },
+    { text: 'Préstamos', icon: <FaBook /> },
+    { text: 'Renovación de préstamo en línea', icon: <FaBook /> },
+    { text: 'Consulta de recursos electrónicos', icon: <FaBook /> },
+    { text: 'Contacto directo', icon: <FaQuestionCircle /> }
   ];
 
   const botResponses: Record<string, string> = {
-    'horario de atención': 'Horario de atención:\nLun-Vie: 09:00 a.m. - 14:00 p.m. / 17:00 p.m. - 20:00 p.m.\nSáb-Dom: Cerrado',
-    'cómo buscar un libro': 'Puedes buscar en nuestro catálogo en línea: https://siabuc.ucol.mx/upqroo\nO visita la sección de ayuda para guías detalladas.',
-    'reglas de préstamo': 'Préstamo de material:\n- Hasta 3 libros por 3 días\n- 2 renovaciones posibles\n- Renovación debe hacerse el día de vencimiento',
-    'contactar al bibliotecario': 'Contáctanos:\n📞 998 283 1859\n✉️ biblioteca@upqroo.edu.mx\n📍 Smza. 255, Mza. 11, Lote 1119-33, 77500 Cancún',
-    'recursos electrónicos': 'Recursos disponibles:\n• Base de datos\n• Bibliotecas digitales\n• Revistas electrónicas\n• E-books\n• Diccionarios\n• Normas y guías\n• Formación autodidacta',
-    'renovación en línea': 'Para renovar tus préstamos en línea, visita nuestro sistema de gestión o contacta al bibliotecario para asistencia.'
+    'consulta de horarios': 'Los horarios de atención de la biblioteca son:\nLunes a Viernes:\n09:00–14:00 y 17:00–20:00\nSábado y Domingo: Cerrado.',
+    'búsqueda de libros': 'Para buscar libros puedes usar el catálogo en línea: https://siabuc.ucol.mx/upqroo\nTambién puedes explorar los recursos electrónicos disponibles.',
+    'préstamos': 'Para realizar un préstamo:\n1. Acude a la Biblioteca.\n2. Selecciona el libro.\n3. Dirígete con la bibliotecóloga y llena la papeleta.\n*El ejemplar 1 no está disponible para préstamo.*',
+    'renovación de préstamo en línea': 'Para renovar tu préstamo:\nIngresa a la sección "Renovación" en nuestro sistema y completa los datos solicitados.',
+    'consulta de recursos electrónicos': 'Nuestra biblioteca ofrece acceso a:\n• Digitalia\n• Pearson\n• Recursos gratuitos como revistas electrónicas, diccionarios y más.',
+    'contacto directo': 'Puedes escribirnos directamente a:\n✉️ Lesliee Lizbeth Martínez Rodríguez\n📩 biblioteca@upqroo.edu.mx\n📞 998 283 1859'
   };
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     if (messages.length === 0) {
       setTimeout(() => {
-        setMessages([{ 
-          text: '¡Hola! Soy el asistente de la Biblioteca Virtual Kaxáant. ¿En qué puedo ayudarte hoy?', 
-          isUser: false 
-        }]);
-      }, 500);
+        setMessages([
+          { 
+            text: '¡Bienvenido a la Biblioteca Virtual Kaxáant! ¿En qué puedo ayudarte?', 
+            isUser: false 
+          },
+          { 
+            text:
+              'Puedo ayudarte con:\n' +
+              '• Consulta de horarios\n' +
+              '• Búsqueda de libros\n' +
+              '• Préstamos\n' +
+              '• Renovación de préstamo en línea\n' +
+              '• Consulta de recursos electrónicos\n' +
+              '• Contacto directo\n\n' +
+              'Selecciona una opción o escribe tu duda.',
+            isUser: false 
+          }
+        ]);
+      }, 600);
     }
   }, [isOpen, messages.length]);
 
@@ -49,8 +88,8 @@ export const LibraryAssistant = () => {
 
     setTimeout(() => {
       const lowerMessage = messageToSend.toLowerCase();
-      let response = 'Puedo ayudarte con:\n- Horarios\n- Préstamos\n- Recursos\n- Contacto\n\nElige una opción o escribe tu pregunta.';
-      
+      let response = 'Puedo ayudarte con:\n• Consulta de horarios\n• Búsqueda de libros\n• Préstamos\n• Renovación de préstamo en línea\n• Consulta de recursos electrónicos\n• Contacto directo\n\nEscribe tu pregunta o elige una opción.';
+
       for (const key in botResponses) {
         if (lowerMessage.includes(key)) {
           response = botResponses[key];
@@ -60,7 +99,7 @@ export const LibraryAssistant = () => {
 
       setMessages(prev => [...prev, { text: response, isUser: false }]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000); // Retraso variable para parecer más natural
+    }, 1000 + Math.random() * 1000);
   };
  
   const handleQuickOption = (option: string) => {
@@ -78,7 +117,7 @@ export const LibraryAssistant = () => {
       </button>
 
       {isOpen && (
-        <div className="assistant-chat">
+        <div className="assistant-chat" ref={chatRef}>
           <div className="chat-header">
             <h3>Asistente Biblioteca Kaxáant</h3>
           </div>
@@ -98,6 +137,7 @@ export const LibraryAssistant = () => {
                 <span></span>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
           
           <div className="quick-options">
