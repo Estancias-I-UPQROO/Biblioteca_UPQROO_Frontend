@@ -14,6 +14,21 @@ export const Navbar = () => {
   const timeoutRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const [fakeResults, setFakeResults] = useState<{ id: number; title: string; image: string }[]>([]);
+
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setFakeResults([
+        { id: 2, title: searchQuery, image: "https://cdn.pixabay.com/photo/2023/03/12/20/37/road-7847795_960_720.jpg", },
+        { id: 3, title: searchQuery, image: "https://cdn.pixabay.com/photo/2023/03/12/20/37/road-7847795_960_720.jpg", },
+        { id: 1, title: searchQuery, image: "https://cdn.pixabay.com/photo/2023/03/12/20/37/road-7847795_960_720.jpg", },
+      ]);
+    } else {
+      setFakeResults([]);
+    }
+  }, [searchQuery]);
+
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setActiveMenu(null);
@@ -208,16 +223,18 @@ export const Navbar = () => {
                 animate={{ opacity: 1, width: 200 }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white"
               >
-                <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500">
+                <form
+                  onSubmit={handleSearch}
+                  className="flex items-center border-b-2 border-orange-500 bg-white w-[200px] px-2 py-1"
+                >
                   <input
                     ref={searchInputRef}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar..."
-                    className="w-full px-2 py-1 text-sm focus:outline-none"
+                    className="w-full text-sm focus:outline-none"
                   />
                   <button
                     type="submit"
@@ -236,6 +253,36 @@ export const Navbar = () => {
                 <Search size={20} />
               </button>
             )}
+
+            {/* Resultados debajo */}
+            <AnimatePresence>
+              {showSearch && searchQuery.trim() && fakeResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full mt-2 w-[200px] bg-white border border-gray-200 shadow-md rounded z-50 max-h-72 overflow-y-auto"
+                >
+                  {fakeResults.map((result) => (
+                    <li
+                      key={result.id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                    >
+                      <img
+                        src={result.image}
+                        alt={`Miniatura de ${result.title}`}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                      <div className="max-w-[130px] break-words">
+                        <span className="font-medium text-gray-900">{result.title}</span>
+                      </div>
+                    </li>
+                  ))}
+
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Menú de navegación para desktop */}
@@ -292,21 +339,57 @@ export const Navbar = () => {
             className="md:hidden bg-white border-t border-gray-200 px-4 pt-2 pb-4 space-y-2 overflow-hidden"
           >
             {/* Barra de búsqueda para móvil */}
-            <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500 mb-3">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar..."
-                className="w-full px-2 py-1 text-sm focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="text-orange-500 hover:text-orange-700 p-1"
+            <div className="relative">
+              <form
+                onSubmit={handleSearch}
+                className="flex items-center border-b-2 border-orange-500 mb-3 bg-white px-2 py-1"
               >
-                <Search size={18} />
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar..."
+                  className="w-full text-sm focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="text-orange-500 hover:text-orange-700 p-1"
+                >
+                  <Search size={18} />
+                </button>
+              </form>
+
+              {/* Resultados debajo del input móvil */}
+              <AnimatePresence>
+                {searchQuery.trim() && fakeResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-2 bg-white border border-gray-200 rounded shadow-md z-40 max-h-72 overflow-y-auto relative"
+                  >
+                    <ul className="text-sm text-gray-800">
+                      {fakeResults.map((result) => (
+                        <li
+                          key={result.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                        >
+                          <img
+                            src={result.image}
+                            alt={`Miniatura de ${result.title}`}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                          <div className="flex-1 min-w-0 break-words">
+                            <span className="font-medium text-gray-900">{result.title}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <NavLink to="/" label="INICIO" />
             <MobileDropdown
