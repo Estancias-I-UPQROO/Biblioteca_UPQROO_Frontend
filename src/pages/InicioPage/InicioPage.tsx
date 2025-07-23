@@ -9,9 +9,10 @@ interface Evento {
   imagen: string;
   titulo: string;
   descripcion: string;
-  imagenesAdicionales?: {
-    [key: string]: string;
-  };
+  botones?: {
+    texto: string;
+    imagenAsociada: string;
+  }[];
 }
 
 export const InicioPage = () => {
@@ -28,53 +29,42 @@ export const InicioPage = () => {
       id: 1, 
       imagen: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg', 
       titulo: 'Taller de Investigación',
-      descripcion: 'Taller práctico sobre metodologías de investigación académica. Duración: 4 semanas.' 
+      descripcion: 'Taller práctico sobre metodologías de investigación académica. Duración: 4 semanas.',
+      botones: [
+        {
+          texto: "Ver Programa",
+          imagenAsociada: "https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+        },
+        {
+          texto: "Instructores",
+          imagenAsociada: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+        }
+      ]
     },
     { 
       id: 2, 
       imagen: 'https://wallpapers.com/images/hd/1920-x-1080-hd-1qq8r4pnn8cmcew4.jpg', 
       titulo: 'Feria del Libro',
-      descripcion: 'Evento anual donde se presentan las novedades editoriales y se ofrecen descuentos especiales.' 
+      descripcion: 'Evento anual donde se presentan las novedades editoriales y se ofrecen descuentos especiales.',
+      botones: [
+        {
+          texto: "Horarios",
+          imagenAsociada: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+        },
+        {
+          texto: "Editoriales",
+          imagenAsociada: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+        },
+        {
+          texto: "Promociones",
+          imagenAsociada: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+        }
+      ]
     },
-    { 
-      id: 3, 
-      imagen: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg', 
-      titulo: 'Conferencia Magistral',
-      descripcion: 'El Dr. Juan Pérez presentará su investigación sobre inteligencia artificial en la educación.' 
-    },
-    { 
-      id: 4, 
-      imagen: 'https://wallpapers.com/images/hd/1920-x-1080-hd-1qq8r4pnn8cmcew4.jpg', 
-      titulo: 'Presentación de Libros',
-      descripcion: 'Autores locales presentarán sus obras más recientes con firma de ejemplares.' 
-    },
-    { 
-      id: 5, 
-      imagen: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg', 
-      titulo: 'Club de Lectura',
-      descripcion: 'Reunión mensual para discutir el libro seleccionado. Este mes: "Cien años de soledad".' 
-    },
-    { 
-      id: 6, 
-      imagen: 'https://wallpapers.com/images/hd/1920-x-1080-hd-1qq8r4pnn8cmcew4.jpg', 
-      titulo: 'Exposición Literaria',
-      descripcion: 'Exhibición de obras literarias históricas de la colección especial de la biblioteca.' 
-    },
-    { 
-      id: 7, 
-      imagen: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg', 
-      titulo: 'Taller de Escritura',
-      descripcion: 'Taller intensivo de escritura creativa para principiantes. Impartido por la escritora María Gómez.' 
-    },
-    { 
-      id: 8, 
-      imagen: 'https://wallpapers.com/images/hd/1920-x-1080-hd-1qq8r4pnn8cmcew4.jpg', 
-      titulo: 'Maratón de Lectura',
-      descripcion: 'Evento de 12 horas continuas de lectura en voz alta. Participación abierta al público.' 
-    }
+    // ... otros eventos pueden seguir el mismo patrón
   ];
 
- const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(null);
   const [imagenActual, setImagenActual] = useState<string | null>(null);
@@ -104,35 +94,36 @@ export const InicioPage = () => {
 
   // Configuración para el carrusel de eventos
   const settingsJustinMind = {
-  infinite: true,
-  speed: 500,
-  slidesToShow: windowWidth > 768 ? 3 : 2,
-  slidesToScroll: 1,
-  arrows: true,
-  dots: false,
-  draggable: true, // Siempre activo para arrastrar
-  swipe: true, // Siempre activo para deslizar
-  touchThreshold: 10, // Sensibilidad del touch
-  responsive: [
-    {
-      breakpoint: 768,
-      settings: {
-        slidesToShow: 2,
-        draggable: true,
-        swipe: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: windowWidth > 768 ? 3 : 2,
+    slidesToScroll: 1,
+    arrows: true,
+    dots: false,
+    draggable: true,
+    swipe: true,
+    touchThreshold: 10,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+          draggable: true,
+          swipe: true,
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          draggable: true,
+          swipe: true,
+        }
       }
-    },
-    {
-      breakpoint: 480,
-      settings: {
-        slidesToShow: 1,
-        draggable: true,
-        swipe: true,
-      }
-    }
-  ]
-};
-const abrirModal = (evento: Evento) => {
+    ]
+  };
+
+  const abrirModal = (evento: Evento) => {
     setEventoSeleccionado(evento);
     setImagenActual(evento.imagen); // Establece la imagen principal inicialmente
     setModalAbierto(true);
@@ -148,7 +139,6 @@ const abrirModal = (evento: Evento) => {
     setImagenActual(nuevaImagen);
   };
 
- 
   return (
     <div className="inicio-container">
       {/* Hero Banner */}
@@ -189,48 +179,46 @@ const abrirModal = (evento: Evento) => {
       {/* Modal para mostrar detalles del evento */}
       {modalAbierto && eventoSeleccionado && (
         <div className="modal-overlay" onClick={cerrarModal}>
-  <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-    <button className="modal-cerrar" onClick={cerrarModal}>&times;</button>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-cerrar" onClick={cerrarModal}>&times;</button>
 
-    {/* Imagen arriba */}
-    <div className="modal-imagen-container">
-      <img
-        src={imagenActual || eventoSeleccionado.imagen}
-        alt={eventoSeleccionado.titulo}
-        className="modal-imagen-fullscreen"
-        onClick={(e) => {
-          e.stopPropagation();
-          document.querySelector('.modal-imagen-fullscreen')?.classList.toggle('fullscreen-active');
-        }}
-      />
-    </div>
+            {/* Imagen arriba */}
+            <div className="modal-imagen-container">
+              <img
+                src={imagenActual || eventoSeleccionado.imagen}
+                alt={eventoSeleccionado.titulo}
+                className="modal-imagen-fullscreen"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.querySelector('.modal-imagen-fullscreen')?.classList.toggle('fullscreen-active');
+                }}
+              />
+            </div>
 
-    {/* Fondo blanco para texto + botón */}
-    <div className="modal-texto">
-      <h3>{eventoSeleccionado.titulo}</h3>
-      <p>{eventoSeleccionado.descripcion}</p>
+            {/* Fondo blanco para texto + botón */}
+            <div className="modal-texto">
+              <h3>{eventoSeleccionado.titulo}</h3>
+              <p>{eventoSeleccionado.descripcion}</p>
 
-      {eventoSeleccionado.imagenesAdicionales && (
-        <div className="botones-imagenes">
-          {Object.entries(eventoSeleccionado.imagenesAdicionales).map(([mes, url]) => (
-            <button
-              key={mes}
-              className={`imagen-boton ${imagenActual === url ? 'activo' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                cambiarImagen(url);
-              }}
-            >
-              {mes.charAt(0).toUpperCase() + mes.slice(1)}
-            </button>
-          ))}
+              {eventoSeleccionado.botones && (
+                <div className="botones-imagenes">
+                  {eventoSeleccionado.botones.map((boton, index) => (
+                    <button
+                      key={index}
+                      className={`imagen-boton ${imagenActual === boton.imagenAsociada ? 'activo' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cambiarImagen(boton.imagenAsociada);
+                      }}
+                    >
+                      {boton.texto}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-
-      <button className="modal-boton">Más información</button>
-    </div>
-  </div>
-</div>
       )}
     </div>
   );

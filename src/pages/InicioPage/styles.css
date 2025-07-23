@@ -371,7 +371,77 @@ body {
 .modal-cerrar:hover {
   background: rgba(0, 0, 0, 0.8);
 }
+/* Estilos para los botones de imágenes */
+.botones-imagenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0;
+}
 
+.imagen-boton {
+  padding: 8px 15px;
+  background-color: #f97316;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.imagen-boton:hover {
+  background-color: #ea580c;
+  transform: translateY(-1px);
+}
+
+.imagen-boton.activo {
+  background-color: #c2410c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el botón principal */
+.modal-boton {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #f97316;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.modal-boton:hover {
+  background-color: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+/* Estilo para el botón de cerrar modal */
+.modal-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #f97316;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.modal-cerrar:hover {
+  background-color: #ea580c;
+  transform: rotate(90deg);
+}
 .modal-boton {
   background-color: #f97316;
   color: white;
