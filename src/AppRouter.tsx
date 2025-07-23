@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { MainAdmin } from "./layouts/MainLayout/MainAdmin";
 import { MainLayout } from "./layouts";
 import { LineamientosPage, BaseDeDatosPage, BibliotecasDigitalesPage, DiccionariosPage, EbooksPage, 
          FilosofiaPage, InicioPage, SugerenciasMaterial,
-         Renovacion, NormasPage, RevistasElectronicasPage, AyudaPage, ServiciosBiblioteca, Catalogo, AdminPanel } from "./pages";
+         Renovacion, NormasPage, RevistasElectronicasPage, AyudaPage, ServiciosBiblioteca, Catalogo, AdminPanel,  } from "./pages";
 
 export const AppRouter = () => {
     return (
@@ -23,7 +24,9 @@ export const AppRouter = () => {
                     <Route path="/servicios" element={<ServiciosBiblioteca />} />
                     <Route path="/renovacion" element={<Renovacion />} />
                     <Route path="/solicitud-compra" element={<SugerenciasMaterial />} />
-                    <Route path="/admin/*" element={<AdminPanel />} />
+                </Route>
+                <Route element={<MainAdmin />} >
+                    <Route path="/admin" element={<AdminPanel />} />
                 </Route>
             </Routes>
         </BrowserRouter>

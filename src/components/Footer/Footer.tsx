@@ -21,13 +21,13 @@ export const Footer = () => {
                                     <Link to='/base-de-datos'>Base de Datos</Link>
                                 </li>
                                 <li>
-                                    <Link to='/bibliotecas-digitale'>Bibliotecas Virtuales</Link>
+                                    <Link to='/bibliotecas-digitales'>Bibliotecas Virtuales</Link>
                                 </li>
                                 <li>
                                     <Link to='/renovacion'>Renovación</Link>
                                 </li>
                                 <li>
-                                    <Link to='/tutorial'>Ayuda</Link>
+                                    <Link to='/ayuda'>Ayuda</Link>
                                 </li>
                             </ul>
 
