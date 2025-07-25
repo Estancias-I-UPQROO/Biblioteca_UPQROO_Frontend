@@ -1,6 +1,5 @@
-// src/App.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import './login.css'; // Import the CSS
+import { useNavigate } from 'react-router-dom'; // ✅ Importa useNavigate
 
 export const Login: React.FC = () => {
   const unameRef = useRef<HTMLInputElement>(null);
@@ -8,95 +7,125 @@ export const Login: React.FC = () => {
   const btnContainerRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLInputElement>(null);
 
-  const [areInputsEmpty, setAreInputsEmpty] = useState(true); // Renamed for clarity
+  const [areInputsEmpty, setAreInputsEmpty] = useState(true);
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
   const [buttonPositionIndex, setButtonPositionIndex] = useState(0);
 
-  // Define the possible shift positions for the button
-  const positions = ['shift-left', 'shift-top', 'shift-right', 'shift-bottom'];
+  const positions = [
+    'translate-x-[-120%]',
+    'translate-y-[-150%]',
+    'translate-x-[120%]',
+    'translate-y-[150%]'
+  ];
 
-  /**
-   * Checks if the input fields are empty and updates the message and button state.
-   */
+  const navigate = useNavigate(); // ✅ Hook para redirección
+
   const showMsg = () => {
-    // Determine if either username or password field is empty
     const isEmpty = (unameRef.current?.value === '' || passRef.current?.value === '');
-    setAreInputsEmpty(isEmpty); // Update state based on input emptiness
+    setAreInputsEmpty(isEmpty);
 
     if (isEmpty) {
-      // If inputs are empty, disable the button and show an error message
       if (btnRef.current) {
         btnRef.current.disabled = true;
       }
-      setMessageColor('rgb(218 49 49)'); // Red color for error
-      setMessage('Por favor, complete los campos antes de continuar');
+      setMessageColor('rgb(218 49 49)');
+      setMessage('Por favor, complete los campos.');
     } else {
-      // If inputs are filled, enable the button and show a success message
       setMessage('Ahora puedes continuar');
-      setMessageColor('#92ff92'); // Green color for success
+      setMessageColor('#92ff92');
       if (btnRef.current) {
         btnRef.current.disabled = false;
       }
     }
   };
 
-  /**
-   * Shifts the login button's position if the input fields are empty.
-   * If the fields are filled, the button will stay in place.
-   */
   const shiftButton = () => {
-    showMsg(); // Always update message and button state first
-
-    // Only shift the button if the input fields ARE EMPTY
-    if (!areInputsEmpty) {
-      return; // If inputs are NOT empty, do not shift the button
-    }
-
-    // Cycle through the shift positions
+    showMsg();
+    if (!areInputsEmpty) return;
     setButtonPositionIndex((prevIndex) => (prevIndex + 1) % positions.length);
   };
 
-  // Effect hook to run showMsg on component mount to set initial state
+  // ✅ Maneja el envío del formulario y redirige
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const username = unameRef.current?.value;
+    const password = passRef.current?.value;
+
+    if (username && password) {
+      navigate('/admin/dash'); // Cambia la ruta según tu app
+    } else {
+      setMessage('Por favor, complete los campos antes de continuar');
+      setMessageColor('rgb(218 49 49)');
+    }
+  };
+
   useEffect(() => {
     showMsg();
-  }, []); // Empty dependency array ensures it runs only once on mount
+  }, []);
+
+  const backgroundStyle = {
+    backgroundImage: 'url("https://wallpapercrafter.com/desktop1/562030-library-cartoon-books-candles-ladder-ladders.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundAttachment: 'fixed',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  };
 
   return (
-    <div className="main-container centered-flex">
-      <div className="form-container">
-        <div className="icon fa fa-user"></div>
-        <form className="centered-flex" onSubmit={(e) => e.preventDefault()}>
-          <div className="title">Iniciar Sesión</div>
-          {/* Display messages based on input status */}
-          <div className="msg" style={{ color: messageColor }}>{message}</div>
-          <div className="field">
+    <div
+      className="min-h-screen min-w-[450px] flex items-center justify-center"
+      style={backgroundStyle}
+    >
+      <div className="w-[400px] h-[480px] grid relative">
+        <div className="absolute w-[85px] text-5xl grid h-[85px] place-content-center
+                     border border-[#2a2a2a] z-10 justify-self-center rounded-full bg-[#0e0e0e]">
+          <i className="fa fa-user text-[#a2a2a2]"></i>
+        </div>
+
+        {/* ✅ Formulario con redirección */}
+        <form
+          className="flex flex-col p-6 pb-2.5 h-[440px] rounded-[30px] bg-black/70 border border-white/10
+                     absolute w-full bottom-0 items-center"
+          onSubmit={handleLogin}
+        >
+          <div className="relative my-10 text-xl font-bold text-white">
+            Iniciar Sesión
+          </div>
+
+          <div className="absolute top-[25%]" style={{ color: messageColor }}>
+            {message}
+          </div>
+
+          <div className="flex relative w-full">
             <input
               type="text"
               placeholder="Nombre de Usuario"
               id="uname"
               ref={unameRef}
-              onInput={showMsg} // Call showMsg on every input change
+              onInput={showMsg}
+              className="block outline-none w-full border-none text-base text-[#d2d2d2]
+                         my-6 mb-1.5 caret-[#cccccc] bg-transparent pb-1 pr-6 border-b border-b-[#404040]"
             />
-            <span className="fa fa-user"></span>
+            <i className="fa fa-user absolute text-sm right-2.5 bottom-2.5 text-[#a2a2a2]"></i>
           </div>
-          <div className="field">
+
+          <div className="flex relative w-full">
             <input
               type="password"
               placeholder="Contraseña"
               id="pass"
               ref={passRef}
-              onInput={showMsg} // Call showMsg on every input change
+              onInput={showMsg}
+              className="block outline-none w-full border-none text-base text-[#d2d2d2]
+                         my-6 mb-1.5 caret-[#cccccc] bg-transparent pb-1 pr-6 border-b border-b-[#404040]"
             />
-            <span className="fa fa-lock"></span>
+            <i className="fa fa-lock absolute text-sm right-2.5 bottom-2.5 text-[#a2a2a2]"></i>
           </div>
-          <div className="action centered-flex">
-            {/* Checkbox and "Forget Password" link removed as per user's previous code */}
-          </div>
+
           <div
-            className="btn-container"
-            // Add mouse and touch event listeners to the button container
-            // This ensures the button shifts when hovered/touched if inputs are empty
+            className="p-5 transition-all duration-200 ease-linear"
             onMouseEnter={shiftButton}
             onTouchStart={shiftButton}
             ref={btnContainerRef}
@@ -105,16 +134,15 @@ export const Login: React.FC = () => {
               type="submit"
               id="login-btn"
               value="Login"
-              // Apply shift class if inputs are empty, otherwise apply 'no-shift'
-              className={areInputsEmpty ? positions[buttonPositionIndex] : 'no-shift'}
+              className={`p-1.5 px-5 border-none bg-[#193e61] text-white font-semibold text-base
+                          rounded-[15px] transition-all duration-300 my-6
+                          ${areInputsEmpty ? positions[buttonPositionIndex] : 'translate-x-0 translate-y-0'}`}
               ref={btnRef}
-              // Also add event listeners directly to the button for more responsive shifting
               onMouseEnter={shiftButton}
               onTouchStart={shiftButton}
-              disabled={areInputsEmpty} // Disable button if inputs are empty
+              disabled={areInputsEmpty}
             />
           </div>
-          {/* "Don't have an Account?" link removed as per user's previous code */}
         </form>
       </div>
     </div>

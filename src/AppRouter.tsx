@@ -27,7 +27,7 @@ export const AppRouter = () => {
                 </Route>
                 <Route element={<MainAdmin />} >
                     <Route path="/admin/login" element={<Login/>} />
-                    <Route path="/admin" element={<AdminPanel />} />
+                    <Route path="/admin/dash" element={<AdminPanel />} />
                 </Route>
             </Routes>
         </BrowserRouter>
