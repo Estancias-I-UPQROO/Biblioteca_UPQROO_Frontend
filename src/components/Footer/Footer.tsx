@@ -2,6 +2,9 @@ import { Link } from "react-router-dom"
 import { PageContainer } from "../PageContainer/PageContainer"
 import './styles.css'
 
+const handleSmoothScroll = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 export const Footer = () => {
     return (
         <footer className="footer-bg">
@@ -18,16 +21,24 @@ export const Footer = () => {
 
                             <ul className="mt-5 space-y-5 flex flex-col">
                                 <li>
-                                    <Link to='/base-de-datos'>Base de Datos</Link>
+                                <Link to='/base-de-datos' onClick={handleSmoothScroll}>
+                                    Base de Datos
+                                </Link>
                                 </li>
                                 <li>
-                                    <Link to='/bibliotecas-digitales'>Bibliotecas Virtuales</Link>
+                                <Link to='/bibliotecas-digitales' onClick={handleSmoothScroll}>
+                                    Bibliotecas Virtuales
+                                </Link>
                                 </li>
                                 <li>
-                                    <Link to='/renovacion'>Renovación</Link>
+                                <Link to='/renovacion' onClick={handleSmoothScroll}>
+                                    Renovación
+                                </Link>
                                 </li>
                                 <li>
-                                    <Link to='/ayuda'>Ayuda</Link>
+                                <Link to='/ayuda' onClick={handleSmoothScroll}>
+                                    Ayuda
+                                </Link>
                                 </li>
                             </ul>
 

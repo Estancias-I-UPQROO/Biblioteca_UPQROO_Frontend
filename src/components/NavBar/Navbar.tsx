@@ -59,7 +59,9 @@ export const Navbar = () => {
       timeoutRef.current = null;
     }
   };
-
+  const handleSmoothScroll = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -88,6 +90,7 @@ export const Navbar = () => {
         onClick={() => {
           setIsMobileMenuOpen(false);
           setActiveMenu(null);
+          handleSmoothScroll();
         }}
       >
         {label}
@@ -144,7 +147,10 @@ export const Navbar = () => {
                   <Link
                     to={to}
                     className={`block py-2 px-5 ${submenuItemClass(to)} transition-colors duration-150 text-sm`}
-                    onClick={() => setActiveMenu(null)}
+                    onClick={() => {
+                      setActiveMenu(null);
+                      handleSmoothScroll();
+                    }}
                   >
                     {label}
                   </Link>
@@ -189,7 +195,10 @@ export const Navbar = () => {
                   <Link
                     to={to}
                     className="block py-2 text-sm text-gray-700 hover:text-orange-500 transition-colors duration-150"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleSmoothScroll();
+                    }}
                   >
                     {label}
                   </Link>
@@ -205,7 +214,7 @@ export const Navbar = () => {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50" ref={menuRef}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center h-full z-10">
+        <Link to="/" className="flex items-center h-full z-10" onClick={handleSmoothScroll}>
           <img
             src="/public/Upqroo_Logo.png"
             alt="Logo"
