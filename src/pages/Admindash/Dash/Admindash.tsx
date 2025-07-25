@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent, useRef, useEffect  } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -25,7 +25,6 @@ export type Evento = {
   }[];
 };
 
-// CAMBIO: Se añade la propiedad 'imageFile' para guardar el archivo de la imagen.
 export type Recurso = {
   id: number;
   title: string;
@@ -71,13 +70,19 @@ const initialEventos: Evento[] = [
     },
 ];
 
-export const AdminPanel = () => {
+export const AdminPanel = () => { 
+  
+  const formRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'inicio' | 'recursos'>('inicio');
-
+ 
+  
   // --- ESTADOS Y LÓGICA PARA LA SECCIÓN INICIO ---
   const [heroImages, setHeroImages] = useState<HeroImage[]>(initialHeroImages);
   const [eventos, setEventos] = useState<Evento[]>(initialEventos);
   const [editingEvento, setEditingEvento] = useState<Evento | null>(null);
+  const [addingEvento, setAddingEvento] = useState<Partial<Evento> | null>(null);
+
+  
 
   const handleHeroImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -101,8 +106,35 @@ export const AdminPanel = () => {
   };
 
   const handleSelectEventoForEditing = (evento: Evento) => {
+    setAddingEvento(null);
     setEditingEvento({ ...evento, botones: evento.botones ? [...evento.botones] : [] });
   };
+  
+  const handleShowAddEventoForm = () => {
+    setEditingEvento(null);
+    setAddingEvento({
+      titulo: '',
+      descripcion: '',
+      imagen: '',
+      botones: [],
+    });
+  };
+
+  const handleCreateEvento = () => {
+    if (addingEvento && addingEvento.titulo && addingEvento.descripcion && addingEvento.imagen) {
+      const newEvento: Evento = {
+        id: Date.now(),
+        titulo: addingEvento.titulo,
+        descripcion: addingEvento.descripcion,
+        imagen: addingEvento.imagen,
+        imagenFile: addingEvento.imagenFile,
+        botones: addingEvento.botones || [],
+      };
+      setEventos([...eventos, newEvento]);
+      setAddingEvento(null);
+    }
+  };
+
 
   const handleUpdateEvento = () => {
     if (editingEvento) {
@@ -122,32 +154,81 @@ export const AdminPanel = () => {
     const { name, value } = e.target;
     if (editingEvento) {
       setEditingEvento({ ...editingEvento, [name]: value });
+    } else if (addingEvento) {
+      setAddingEvento({ ...addingEvento, [name]: value });
     }
   };
 
   const handleEventoImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && editingEvento) {
-      const file = e.target.files[0];
-      setEditingEvento({
-        ...editingEvento,
-        imagen: URL.createObjectURL(file),
-        imagenFile: file,
-      });
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const imageUrl = URL.createObjectURL(file);
+        
+        if (editingEvento) {
+            setEditingEvento({
+                ...editingEvento,
+                imagen: imageUrl,
+                imagenFile: file,
+            });
+        } else if (addingEvento) {
+            setAddingEvento({
+                ...addingEvento,
+                imagen: imageUrl,
+                imagenFile: file,
+            });
+        }
     }
   };
+
     const addBotonToForm = () => {
+    const nuevoBoton = { texto: '', imagenAsociada: '' };
+    if (editingEvento) {
+      const newBotones = [...(editingEvento.botones || []), nuevoBoton];
+      setEditingEvento({ ...editingEvento, botones: newBotones });
+    } else if (addingEvento) {
+      const newBotones = [...(addingEvento.botones || []), nuevoBoton];
+      setAddingEvento({ ...addingEvento, botones: newBotones });
+    }
+  };
+    const removeBotonFromForm = (btnIndex: number) => {
+    if (editingEvento && editingEvento.botones) {
+      const filteredBotones = editingEvento.botones.filter((_, index) => index !== btnIndex);
+      setEditingEvento({ ...editingEvento, botones: filteredBotones });
+    } else if (addingEvento && addingEvento.botones) {
+      const filteredBotones = addingEvento.botones.filter((_, index) => index !== btnIndex);
+      setAddingEvento({ ...addingEvento, botones: filteredBotones });
+    }
+  };
+  const handleBotonTextChange = (index: number, value: string) => {
+    if (editingEvento) {
+        const updatedBotones = [...editingEvento.botones];
+        updatedBotones[index].texto = value;
+        setEditingEvento({...editingEvento, botones: updatedBotones});
+    } else if (addingEvento) {
+        const updatedBotones = [...(addingEvento.botones || [])];
+        updatedBotones[index].texto = value;
+        setAddingEvento({...addingEvento, botones: updatedBotones});
+    }
+  }
+  const handleBotonImageChange = (index: number, file: File | null) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        const imageUrl = reader.result as string;
         if (editingEvento) {
-          const newBotones = [...(editingEvento.botones || []), { texto: '', imagenAsociada: '' }];
-          setEditingEvento({ ...editingEvento, botones: newBotones });
+            const updatedBotones = [...editingEvento.botones];
+            updatedBotones[index].imagenAsociada = imageUrl;
+            setEditingEvento({...editingEvento, botones: updatedBotones});
+        } else if (addingEvento) {
+            const updatedBotones = [...(addingEvento.botones || [])];
+            updatedBotones[index].imagenAsociada = imageUrl;
+            setAddingEvento({...addingEvento, botones: updatedBotones});
         }
-      };
-    
-      const removeBotonFromForm = (btnIndex: number) => {
-        if (editingEvento && editingEvento.botones) {
-          const filteredBotones = editingEvento.botones.filter((_, index) => index !== btnIndex);
-          setEditingEvento({ ...editingEvento, botones: filteredBotones });
-        }
-      };
+    };
+    reader.readAsDataURL(file);
+  }
+
   const settingsHero = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1, autoplay: true, fade: true, arrows: false };
   const settingsEvents = { dots: true, infinite: false, speed: 500, slidesToShow: 3, slidesToScroll: 1, arrows: true, responsive: [{ breakpoint: 768, settings: { slidesToShow: 1 } }] };
 
@@ -163,7 +244,6 @@ export const AdminPanel = () => {
 
   const [activeCategory, setActiveCategory] = useState(1);
   
-  // CAMBIO: Se define un tipo más específico para el estado 'newResource'.
   type NewResourceState = Omit<Recurso, 'id' | 'active'>;
   
   const [newResource, setNewResource] = useState<NewResourceState>({
@@ -176,14 +256,12 @@ export const AdminPanel = () => {
 
   const [editingResource, setEditingResource] = useState<Recurso | null>(null);
 
-  // CAMBIO: Nueva función para manejar la carga de la imagen del recurso.
   const handleResourceImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const previewUrl = URL.createObjectURL(file);
 
       if (editingResource) {
-        // Libera la URL anterior si era un objeto blob para evitar fugas de memoria
         if (editingResource.image.startsWith('blob:')) {
           URL.revokeObjectURL(editingResource.image);
         }
@@ -214,7 +292,6 @@ export const AdminPanel = () => {
             }
           : cat
       ));
-      // CAMBIO: Se resetea el estado incluyendo 'imageFile'.
       setNewResource({ title: '', description: '', image: '', siteLink: '', imageFile: undefined });
     }
   };
@@ -239,7 +316,6 @@ export const AdminPanel = () => {
     setCategorias(categorias.map(cat => {
       if (cat.id === activeCategory) {
         const resourceToDelete = cat.recursos.find(res => res.id === id);
-        // CAMBIO: Si la imagen era local, se revoca su URL para liberar memoria.
         if (resourceToDelete && resourceToDelete.image.startsWith('blob:')) {
           URL.revokeObjectURL(resourceToDelete.image);
         }
@@ -251,6 +327,15 @@ export const AdminPanel = () => {
       return cat;
     }));
   };
+
+  const currentFormEvento = editingEvento || addingEvento;
+
+   useEffect(() => {
+    // Solo intenta hacer scroll si el formulario es visible Y la ref existe
+    if (currentFormEvento && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [currentFormEvento]);
 
   return (
     <div className="admin-panel">
@@ -296,6 +381,11 @@ export const AdminPanel = () => {
                     </div>
                     <div className="admin-section">
                         <h2>Eventos</h2>
+                        <button 
+                            onClick={handleShowAddEventoForm} 
+                            className="btn-add-evento-ghost"> {/* <-- O esta otra clase */}
+                            Añadir Nuevo Evento
+                        </button>
                         <div className="eventos-grid">
                             {eventos.map((evento) => (
                                 <div key={evento.id} className="evento-card" onClick={() => handleSelectEventoForEditing(evento)}>
@@ -305,45 +395,54 @@ export const AdminPanel = () => {
                                 </div>
                             ))}
                         </div>
-                        {editingEvento && (
-                            <div className="resource-form">
-                                <h3>Editando Evento: {editingEvento.titulo}</h3>
-                                <input name="titulo" type="text" placeholder="Título del evento" value={editingEvento.titulo} onChange={handleEventoFormChange} />
-                                <textarea name="descripcion" placeholder="Descripción" value={editingEvento.descripcion} onChange={handleEventoFormChange} />
-                                <h4>Imagen Principal del Evento</h4>
-                                <label htmlFor="evento-image-upload" className="file-upload-label">Cambiar Imagen...</label>
+                        {currentFormEvento && (
+                            <div ref={formRef} className="resource-form">
+                                <h3>{editingEvento ? `Editando Evento: ${currentFormEvento.titulo}`: 'Añadir Nuevo Evento'}</h3>
+                                {currentFormEvento.imagen && <img src={currentFormEvento.imagen} alt="Previsualización" className="form-image-preview" />}
+                                <label htmlFor="evento-image-upload" className="file-upload-label">Imagen del Evento...</label>
+                                <input name="titulo" type="text" placeholder="Título del evento" value={currentFormEvento.titulo} onChange={handleEventoFormChange} />
+                                <textarea name="descripcion" placeholder="Descripción" value={currentFormEvento.descripcion} onChange={handleEventoFormChange} />
                                 <input id="evento-image-upload" type="file" accept="image/*" onChange={handleEventoImageChange} style={{ display: 'none' }} />
-                                {editingEvento.imagen && <img src={editingEvento.imagen} alt="Previsualización" className="form-image-preview" />}
-                                <h4>Botones del Evento</h4>
-                                {editingEvento.botones?.map((btn, index) => (
-                                    <div key={index} className="boton-item">
-                                        <input type="text" placeholder="Texto del botón" value={btn.texto} onChange={(e) => {
-                                            const updated = [...(editingEvento.botones ?? [])];
-                                            updated[index].texto = e.target.value;
-                                            setEditingEvento({ ...editingEvento, botones: updated });
-                                        }}/>
-                                        <label htmlFor={`boton-image-${index}`} className="file-upload-label">Cambiar Imagen Asociada...</label>
-                                        <input id={`boton-image-${index}`} type="file" accept="image/*" onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = () => {
-                                                    const updated = [...(editingEvento.botones ?? [])];
-                                                    updated[index].imagenAsociada = reader.result as string;
-                                                    setEditingEvento({ ...editingEvento, botones: updated });
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }} style={{ display: 'none' }} />
-                                        {btn.imagenAsociada && <img src={btn.imagenAsociada} alt="Botón" className="form-image-preview-small" />}
-                                        <button onClick={() => removeBotonFromForm(index)}>Eliminar</button>
-                                    </div>
+                                <h4></h4>
+                                {currentFormEvento.botones?.map((btn, index) => (
+                                <div key={index} className="boton-item">
+                                    <label htmlFor={`boton-image-${index}`} className="file-upload-label">
+                                        Imagen del Boton...
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Texto del botón"
+                                        value={btn.texto}
+                                        // CORREGIDO: Llama a la nueva función
+                                        onChange={(e) => handleBotonTextChange(index, e.target.value)}
+                                    />
+                                    
+                                    <input
+                                        id={`boton-image-${index}`}
+                                        type="file"
+                                        accept="image/*"
+                                        // CORREGIDO: Llama a la nueva función
+                                        onChange={(e) => handleBotonImageChange(index, e.target.files?.[0] || null)}
+                                        style={{ display: 'none' }}
+                                    />
+                                    {btn.imagenAsociada && <img src={btn.imagenAsociada} alt="Botón" className="form-image-preview-small" />}
+                                    <button onClick={() => removeBotonFromForm(index)}>Eliminar</button>
+                                </div>
                                 ))}
                                 <div className="form-actions">
                                     <button onClick={addBotonToForm}>Agregar Botón</button>
-                                    <button onClick={handleUpdateEvento}>Guardar Cambios</button>
-                                    <button onClick={() => setEditingEvento(null)} className="cancel">Cancelar</button>
-                                    <button onClick={() => handleDeleteEvento(editingEvento.id)} className="delete">Eliminar Evento</button>
+                                    {editingEvento ? (
+                                        <>
+                                            <button onClick={handleUpdateEvento}>Guardar Cambios</button>
+                                            <button onClick={() => setEditingEvento(null)} className="cancel">Cancelar</button>
+                                            <button onClick={() => handleDeleteEvento(editingEvento.id)} className="delete">Eliminar Evento</button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={handleCreateEvento}>Crear Evento</button>
+                                            <button onClick={() => setAddingEvento(null)} className="cancel">Cancelar</button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -408,14 +507,12 @@ export const AdminPanel = () => {
                             <input type="text" placeholder="Título" value={editingResource ? editingResource.title : newResource.title} onChange={(e) => editingResource ? setEditingResource({...editingResource, title: e.target.value}) : setNewResource({...newResource, title: e.target.value}) }/>
                             <textarea placeholder="Descripción" value={editingResource ? editingResource.description : newResource.description} onChange={(e) => editingResource ? setEditingResource({...editingResource, description: e.target.value}) : setNewResource({...newResource, description: e.target.value})}/>
                             
-                            {/* CAMBIO: Se reemplaza el input de texto por un input de tipo 'file' con una label estilizada. */}
                             <div className="form-image-upload-container">
                                 <label htmlFor="resource-image-upload" className="file-upload-label">
                                     {editingResource ? 'Cambiar Imagen...' : 'Seleccionar Imagen...'}
                                 </label>
                                 <input id="resource-image-upload" type="file" accept="image/*" onChange={handleResourceImageChange} style={{ display: 'none' }}/>
                                 
-                                {/* Previsualización de la imagen */}
                                 {editingResource?.image && <img src={editingResource.image} alt="Previsualización" className="form-image-preview" />}
                                 {!editingResource && newResource.image && <img src={newResource.image} alt="Previsualización" className="form-image-preview" />}
                             </div>
