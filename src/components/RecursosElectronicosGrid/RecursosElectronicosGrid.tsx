@@ -8,4 +8,4 @@ export const RecursosElectronicosGrid = ({ children }: { children: React.ReactNo
       </div>
     </section>
   );
-};  
+};   

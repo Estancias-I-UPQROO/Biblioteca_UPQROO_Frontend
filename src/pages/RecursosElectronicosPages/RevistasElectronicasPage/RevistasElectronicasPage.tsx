@@ -1,52 +1,64 @@
 import { PageContainer, PageHeader, RecursosElectronicosCard, RecursosElectronicosGrid } from "../../../components"
-
+import { useState } from "react";
 export const RevistasElectronicasPage = () => {
-    return (
-        <>
-            <PageHeader>Revistas Electrónicas</PageHeader>
-
-            <PageContainer>
-                <RecursosElectronicosGrid>
-                    <RecursosElectronicosCard
-                        title="Chicago Journal"
-                        description="Lorem ipsum dolor sit amet, consectetur"
-                        image="/Chicago_Journal.png"
-                        siteLink="https://www.journals.uchicago.edu/"
-                    />
-                    <RecursosElectronicosCard
-                        title="sciELO"
-                        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur mattis sit amet enim eget malesuada. Integer eleifend convallis ipsum ac blandit. Praesent euismod aliquam nisl, ut malesuada nulla accumsan eu. Fusce non felis facilisis, vulputate augue at, gravida elit. Phasellus quam lacus, finibus non molestie in, dapibus id ipsum. Maecenas purus sem, lacinia vel ipsum at, cursus faucibus velit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin elit purus, tincidunt vitae sagittis vitae, consectetur ac orci. Curabitur at pellentesque orci. Integer id posuere massa, eu dignissim sapien. Pellentesque vestibulum placerat velit, vel commodo lorem feugiat vitae. "
-                        image="/scielo.png"
-                        siteLink="https://www.journals.uchicago.edu/"
-                    />
-                    <RecursosElectronicosCard
-                        title="Redalyc"
-                        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur mattis sit amet enim eget malesuada. Integer eleifend convallis ipsum ac blandit. Praesent euismod aliquam nisl, ut malesuada nulla accumsan eu. Fusce non felis facilisis, vulputate augue at, gravida elit. Phasellus quam lacus, finibus non molestie in, dapibus id ipsum. Maecenas purus sem, lacinia vel ipsum at, cursus faucibus velit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin elit purus, tincidunt vitae sagittis vitae, consectetur ac orci. Curabitur at pellentesque orci. Integer id posuere massa, eu dignissim sapien. Pellentesque vestibulum placerat velit, vel commodo lorem feugiat vitae. "
-                        image="/redalyc.jpg"
-                        siteLink="https://www.journals.uchicago.edu/"
-                    />
-                    <RecursosElectronicosCard
-                        title="Redalyc"
-                        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur mattis sit amet enim eget malesuada. Integer eleifend convallis ipsum ac blandit. Praesent euismod aliquam nisl, ut malesuada nulla accumsan eu. Fusce non felis facilisis, vulputate augue at, gravida elit. Phasellus quam lacus, finibus non molestie in, dapibus id ipsum. Maecenas purus sem, lacinia vel ipsum at, cursus faucibus velit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin elit purus, tincidunt vitae sagittis vitae, consectetur ac orci. Curabitur at pellentesque orci. Integer id posuere massa, eu dignissim sapien. Pellentesque vestibulum placerat velit, vel commodo lorem feugiat vitae. "
-                        image="/redalyc.jpg"
-                        siteLink="https://www.journals.uchicago.edu/"
-                    />
-
-                    <RecursosElectronicosCard
-                        title="Redalyc"
-                        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur mattis sit amet enim eget malesuada. Integer eleifend convallis ipsum ac blandit. Praesent euismod aliquam nisl, ut malesuada nulla accumsan eu. Fusce non felis facilisis, vulputate augue at, gravida elit. Phasellus quam lacus, finibus non molestie in, dapibus id ipsum. Maecenas purus sem, lacinia vel ipsum at, cursus faucibus velit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin elit purus, tincidunt vitae sagittis vitae, consectetur ac orci. Curabitur at pellentesque orci. Integer id posuere massa, eu dignissim sapien. Pellentesque vestibulum placerat velit, vel commodo lorem feugiat vitae. "
-                        image="/redalyc.jpg"
-                        siteLink="https://www.journals.uchicago.edu/"
-                    />
-
-                    <RecursosElectronicosCard
-                        title="Redalyc"
-                        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur mattis sit amet enim eget malesuada. Integer eleifend convallis ipsum ac blandit. Praesent euismod aliquam nisl, ut malesuada nulla accumsan eu. Fusce non felis facilisis, vulputate augue at, gravida elit. Phasellus quam lacus, finibus non molestie in, dapibus id ipsum. Maecenas purus sem, lacinia vel ipsum at, cursus faucibus velit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin elit purus, tincidunt vitae sagittis vitae, consectetur ac orci. Curabitur at pellentesque orci. Integer id posuere massa, eu dignissim sapien. Pellentesque vestibulum placerat velit, vel commodo lorem feugiat vitae. "
-                        image="/redalyc.jpg"
-                        siteLink="https://www.journals.uchicago.edu/"
-                    />
-                </RecursosElectronicosGrid>
-            </PageContainer>
-        </>
-    )
-}
+           const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
+           
+             const recursos = [
+               {
+                 title: "Chicago Journal",
+                 description: "Lorem ipsum dolor sit amet, consectetur",
+                 image: "/Chicago_Journal.png",
+                 siteLink: "https://www.journals.uchicago.edu/",
+               },
+               {
+                 title: "SciELO",
+                 description: "Descripción larga...",
+                 image: "/scielo.png",
+                 siteLink: "https://www.scielo.org/",
+               },
+               {
+                 title: "Redalyc 1",
+                 description: "Descripción larga...",
+                 image: "/redalyc.jpg",
+                 siteLink: "https://www.redalyc.org/",
+               },
+               {
+                 title: "Redalyc 2",
+                 description: "Descripción larga...",
+                 image: "/redalyc.jpg",
+                 siteLink: "https://www.redalyc.org/",
+               },
+               {
+                 title: "Redalyc 3",
+                 description: "Descripción larga...",
+                 image: "/redalyc.jpg",
+                 siteLink: "https://www.redalyc.org/",
+               },
+               {
+                 title: "Redalyc 4",
+                 description: "Descripción larga...",
+                 image: "/redalyc.jpg",
+                 siteLink: "https://www.redalyc.org/",
+               },
+             ];
+           
+             return (
+               <>
+                 <PageHeader>Revistas Electronicas</PageHeader>
+                 <PageContainer>
+                   <RecursosElectronicosGrid>
+                     {recursos.map((recurso, index) => (
+                       <RecursosElectronicosCard
+                         key={index}
+                         {...recurso}
+                         index={index}
+                         expandedCardIndex={expandedCardIndex}
+                         setExpandedCardIndex={setExpandedCardIndex}
+                       />
+                     ))}
+                   </RecursosElectronicosGrid>
+                 </PageContainer>
+               </>
+             );
+           };
+           

@@ -105,28 +105,6 @@ body {
 
 
 
-/* Media Query especial para tablets (iPad, Zenbook Fold, etc.) */
-@media (min-width: 768px) and (max-width: 1180px) {
-  .hero-biblioteca {
-    height: 55vh;
-  }
-
-  .slide-biblio img {
-    object-fit: cover;
-  }
-
-  .contenido-hero {
-    width: 85%;
-  }
-
-  .contenido-hero h1 {
-    font-size: 2.5rem;
-  }
-
-  .contenido-hero h2 {
-    font-size: 1.2rem;
-  }
-}
 
 /* Prevenir selección en todo el carrusel */
 .carousel * {
@@ -136,20 +114,6 @@ body {
   -ms-user-select: none;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .franja-contenedor {
-    height: 300px;
-  }
-  
-  .contenido-texto h3 {
-    font-size: 1.8rem;
-  }
-  
-  .contenido-texto p {
-    font-size: 1rem;
-  }
-}
 
 @media (max-width: 480px) {
   .franja-contenedor {
@@ -165,17 +129,6 @@ body {
     margin-bottom: 1rem;
   }
 
-}/* Responsive */
-@media (max-width: 768px) {
-  .hero-biblioteca,
-  .slide-biblio {
-    height: 60vh;
-  }
-
-  .contenido-hero {
-    padding: 0.5rem;
-    width: 95%;
-  }
 }
 .slider-jmind {
   background-color: #ffffff;
@@ -547,4 +500,55 @@ body {
 .modal-contenido::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
+}
+
+/* Media Query especial para tablets (iPad, Zenbook Fold, etc.) */
+@media (min-width: 768px) and (max-width: 1180px) {
+  .hero-biblioteca {
+    height: 10cm;
+  }
+
+  .slide-biblio img {
+    object-fit: cover;
+  }
+
+  .contenido-hero {
+    width: 85%;
+  }
+
+  .contenido-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .contenido-hero h2 {
+    font-size: 1.2rem;
+  }
+
+  
+}
+
+/* --- REGLAS RESPONSIVE UNIFICADAS --- */
+/* He unido tus dos media queries para (max-width: 768px) para que sea más limpio */
+@media (max-width: 768px) {
+  .hero-biblioteca,
+  .slide-biblio {
+    height: 60vh;
+  }
+
+  .contenido-hero {
+    padding: 0.5rem;
+    width: 95%;
+  }
+
+  .franja-contenedor {
+    height: 300px;
+  }
+  
+  .contenido-texto h3 {
+    font-size: 1.8rem;
+  }
+  
+  .contenido-texto p {
+    font-size: 1rem;
+  }
 }
