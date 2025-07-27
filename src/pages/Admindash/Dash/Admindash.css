@@ -816,3 +816,78 @@
     width: 100%;
   }
 }
+
+
+button.restore {
+  background-color: #4caf50;
+  color: white;
+}
+
+button.restore:hover{
+  background-color: #027a06;
+}
+
+button.delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.category-item-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 8px;
+  flex-wrap: wrap; /* ✅ permite que se acomode mejor en móvil */
+}
+
+.category-name-button {
+  flex-grow: 1;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: none;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+}
+
+.category-name-button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.category-action-button {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.category-action-button.delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.category-action-button.restore {
+  background-color: #4caf50;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .category-item-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-name-button,
+  .category-action-button {
+    width: 100%;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .category-action-button {
+    margin-top: 6px;
+  }
+}
