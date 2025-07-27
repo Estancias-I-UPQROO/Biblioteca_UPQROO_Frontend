@@ -334,7 +334,7 @@ export const AdminPanel = () => {
   formData.append('Descripcion', evento.descripcion);
   if (evento.imagenFile) formData.append('imagenEvento', evento.imagenFile);
 
-  const subeventosData = (evento.botones || []).map((b, i) => ({
+  const subeventosData = (evento.botones || []).map((b) => ({
     Titulo: b.texto,
     ID_SubEvento: b.ID_SubEvento ?? undefined
   }));
@@ -464,7 +464,6 @@ export const AdminPanel = () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const imageUrl = reader.result as string;
 
       if (editingEvento) {
         const updatedBotones = [...editingEvento.botones];
