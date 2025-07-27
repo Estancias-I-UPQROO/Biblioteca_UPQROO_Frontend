@@ -3,22 +3,69 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// --- HOOKS ADICIONALES ---
+
+/**
+ * Hook para detectar si el ancho de la pantalla coincide con una media query.
+ * @param query La media query de CSS a evaluar (ej. "(max-width: 1159px)")
+ * @returns {boolean} True si la query coincide, false en caso contrario.
+ */
+const useMediaQuery = (query: string): boolean => {
+  const [matches, setMatches] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Establece el valor inicial
+    const mediaQueryList = window.matchMedia(query);
+    setMatches(mediaQueryList.matches);
+    
+    // Escucha cambios en el tamaño de la ventana
+    const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
+    
+    mediaQueryList.addEventListener("change", listener);
+    return () => mediaQueryList.removeEventListener("change", listener);
+  }, [query]);
+
+  return matches;
+};
+
+/**
+ * Hook para detectar si el dispositivo es táctil.
+ * @returns {boolean} True si es un dispositivo táctil.
+ */
+const useIsTouchDevice = (): boolean => {
+  const [isTouch, setIsTouch] = useState<boolean>(false);
+  useEffect(() => {
+    const onTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsTouch(onTouch);
+  }, []);
+  return isTouch;
+};
+
+
+// --- COMPONENTE NAVBAR ---
+
 export const Navbar = () => {
   const location = useLocation();
+  const isMobile = useMediaQuery("(max-width: 1159px)");
+  const isTouchDevice = useIsTouchDevice();
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Cierra menús al cambiar de ruta
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setActiveMenu(null);
   }, [location.pathname]);
 
+  // Cierra menús al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -32,11 +79,19 @@ export const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Enfoca el input de búsqueda al mostrarse
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [showSearch]);
+
+  // Cierra el menú de escritorio si se cambia a vista móvil con un menú abierto
+  useEffect(() => {
+    if (isMobile) {
+      setActiveMenu(null);
+    }
+  }, [isMobile]);
 
   const clearTimeout = () => {
     if (timeoutRef.current !== null) {
@@ -44,19 +99,21 @@ export const Navbar = () => {
       timeoutRef.current = null;
     }
   };
+
   const handleSmoothScroll = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Implementa tu lógica de búsqueda aquí
       console.log("Buscando:", searchQuery);
     }
     setShowSearch(false);
+    setIsMobileMenuOpen(false);
   };
 
-  // Estilos optimizados
+  // --- Estilos y Componentes Internos (sin cambios) ---
   const navItemClass = (path: string) =>
     location.pathname === path
       ? "text-orange-600 font-semibold border-b-2 border-orange-500"
@@ -83,6 +140,7 @@ export const Navbar = () => {
     </div>
   );
 
+  // --- COMPONENTE DESKTOPDROPDOWN MODIFICADO ---
   const DesktopDropdown = ({
     menu,
     links,
@@ -90,28 +148,37 @@ export const Navbar = () => {
     menu: string;
     links: { to: string; label: string }[];
   }) => {
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
     const handleMouseEnter = () => {
-      clearTimeout();
-      setActiveMenu(menu);
+      // Activa el hover solo en dispositivos no táctiles
+      if (!isTouchDevice) {
+        clearTimeout();
+        setActiveMenu(menu);
+      }
     };
 
     const handleMouseLeave = () => {
-      timeoutRef.current = window.setTimeout(() => {
-        setActiveMenu(null);
-      }, 200);
+      // Activa el leave solo en dispositivos no táctiles
+      if (!isTouchDevice) {
+        timeoutRef.current = window.setTimeout(() => {
+          setActiveMenu(null);
+        }, 200);
+      }
+    };
+
+    const handleClick = () => {
+      // Alterna la visibilidad del menú al hacer clic
+      setActiveMenu(activeMenu === menu ? null : menu);
     };
 
     return (
       <div
-        ref={dropdownRef}
         className="relative h-full flex items-center"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <button
-          className={`px-4 ${navItemClass(links[0].to)} flex items-center h-full relative z-10`}
+          onClick={handleClick}
+          className={`px-4 ${navItemClass(links[0].to)} flex items-center h-full relative z-10 cursor-pointer`}
         >
           {menu.toUpperCase()} <span className="ml-1">▾</span>
         </button>
@@ -124,7 +191,7 @@ export const Navbar = () => {
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.15 }}
               className="absolute left-0 top-full mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50"
-              onMouseEnter={handleMouseEnter}
+              onMouseEnter={handleMouseEnter} // Mantiene el menú abierto al mover el cursor sobre él
               onMouseLeave={handleMouseLeave}
             >
               {links.map(({ to, label }) => (
@@ -156,7 +223,6 @@ export const Navbar = () => {
     links: { to: string; label: string }[];
   }) => {
     const [open, setOpen] = useState(false);
-
     return (
       <div className="border-l-2 border-gray-100 pl-2">
         <button
@@ -200,144 +266,72 @@ export const Navbar = () => {
     <nav className="bg-white shadow-md sticky top-0 z-50" ref={menuRef}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center h-full z-10" onClick={handleSmoothScroll}>
-          <img
-            src="/public/Upqroo_Logo.png"
-            alt="Logo"
-            className="h-12 w-auto"
-          />
+          <img src="/public/Upqroo_Logo.png" alt="Logo" className="h-12 w-auto"/>
         </Link>
-
-        {/* Contenedor de elementos del lado derecho */}
-        <div className="flex items-center gap-1"> {/* Cambiado space-x-4 a gap-1 para reducir espacio */}
-          {/* Barra de búsqueda minimalista para desktop */}
-          <div className="hidden md:block relative" ref={searchRef}>
-            {showSearch ? (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 200 }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white"
-              >
-                <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar..."
-                    className="w-full px-2 py-1 text-sm focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="text-orange-500 hover:text-orange-700 p-1"
-                  >
-                    <Search size={18} />
-                  </button>
-                </form>
-              </motion.div>
-            ) : (
-              <button
-                onClick={() => setShowSearch(true)}
-                className="p-1 text-gray-700 hover:text-orange-500 transition-colors duration-150"
-                aria-label="Buscar"
-              >
-                <Search size={20} />
-              </button>
-            )}
-          </div>
-
-          {/* Menú de navegación para desktop */}
-          <div className="hidden md:flex items-center h-full text-sm font-medium ml-2"> {/* Añadido ml-2 */}
-            <NavLink to="/" label="INICIO" />
-            <DesktopDropdown
-              menu="acerca de nosotros"
-              links={[
-                { to: "/filosofia", label: "Filosofía" },
-                { to: "/lineamientos", label: "Lineamientos" },
-              ]}
-            />
-            <NavLink to="/servicios" label="SERVICIOS" />
-            <DesktopDropdown
-              menu="recursos electrónicos"
-              links={[
-                { to: "/base-de-datos", label: "Base de datos" },
-                { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
-                { to: "/revistas-electronicas", label: "Revistas electrónicas" },
-                { to: "/ebooks", label: "E-books" },
-                { to: "/diccionarios", label: "Diccionarios" },
-                { to: "/normas", label: "Normas y guías" },
-                { to: "/formacion-autodidacta", label: "Formación autodidacta" },
-              ]}
-            />
-            <NavLink to="/catalogo" label="CATÁLOGO" />
-            <NavLink to="/ayuda" label="AYUDA" />
-          </div>
-
-          {/* Botón de menú hamburguesa para móvil */}
+        
+        {/* RENDERIZADO CONDICIONAL: DESKTOP vs MOBILE */}
+        {isMobile ? (
+          // --- VISTA MÓVIL ---
           <button
-            className="md:hidden p-1 hover:bg-gray-100 transition-colors duration-150"
+            className="p-1 hover:bg-gray-100 transition-colors duration-150"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-expanded={isMobileMenuOpen}
             aria-label="Toggle navigation menu"
           >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6 text-gray-700" />
-            ) : (
-              <Menu className="w-6 h-6 text-gray-700" />
-            )}
+            {isMobileMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
           </button>
-        </div>
+        ) : (
+          // --- VISTA ESCRITORIO ---
+          <div className="flex items-center gap-1">
+            <div className="relative" ref={searchRef}>
+              {showSearch ? (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 200 }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white"
+                >
+                  <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500">
+                    <input ref={searchInputRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar..." className="w-full px-2 py-1 text-sm focus:outline-none" />
+                    <button type="submit" className="text-orange-500 hover:text-orange-700 p-1"><Search size={18} /></button>
+                  </form>
+                </motion.div>
+              ) : (
+                <button onClick={() => setShowSearch(true)} className="p-1 text-gray-700 hover:text-orange-500 transition-colors duration-150" aria-label="Buscar"><Search size={20} /></button>
+              )}
+            </div>
+            <div className="flex items-center h-full text-sm font-medium ml-2">
+              <NavLink to="/" label="INICIO" />
+              <DesktopDropdown menu="acerca de nosotros" links={[{ to: "/filosofia", label: "Filosofía" }, { to: "/lineamientos", label: "Lineamientos" }]}/>
+              <NavLink to="/servicios" label="SERVICIOS" />
+              <DesktopDropdown menu="recursos electrónicos" links={[{ to: "/base-de-datos", label: "Base de datos" }, { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" }, { to: "/revistas-electronicas", label: "Revistas electrónicas" }, { to: "/ebooks", label: "E-books" }, { to: "/diccionarios", label: "Diccionarios" }, { to: "/normas", label: "Normas y guías" }, { to: "/formacion-autodidacta", label: "Formación autodidacta" }]}/>
+              <NavLink to="/catalogo" label="CATÁLOGO" />
+              <NavLink to="/ayuda" label="AYUDA" />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Menú móvil (permanece igual) */}
+      {/* MENÚ MÓVIL DESPLEGABLE */}
       <AnimatePresence>
-        {isMobileMenuOpen && (
+        {isMobile && isMobileMenuOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden bg-white border-t border-gray-200 px-4 pt-2 pb-4 space-y-2 overflow-hidden"
+            className="bg-white border-t border-gray-200 px-4 pt-2 pb-4 space-y-2 overflow-hidden"
           >
-            {/* Barra de búsqueda para móvil */}
             <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500 mb-3">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar..."
-                className="w-full px-2 py-1 text-sm focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="text-orange-500 hover:text-orange-700 p-1"
-              >
-                <Search size={18} />
-              </button>
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar..." className="w-full px-2 py-1 text-sm focus:outline-none"/>
+              <button type="submit" className="text-orange-500 hover:text-orange-700 p-1"><Search size={18} /></button>
             </form>
 
             <NavLink to="/" label="INICIO" />
-            <MobileDropdown
-              menu="acerca de nosotros"
-              links={[
-                { to: "/filosofia", label: "Filosofía" },
-                { to: "/lineamientos", label: "Lineamientos" },
-              ]}
-            />
+            <MobileDropdown menu="acerca de nosotros" links={[{ to: "/filosofia", label: "Filosofía" }, { to: "/lineamientos", label: "Lineamientos" }]}/>
             <NavLink to="/servicios" label="SERVICIOS" />
-            <MobileDropdown
-              menu="recursos electrónicos"
-              links={[
-                { to: "/base-de-datos", label: "Base de datos" },
-                { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
-                { to: "/revistas-electronicas", label: "Revistas electrónicas" },
-                { to: "/ebooks", label: "E-books" },
-                { to: "/diccionarios", label: "Diccionarios" },
-                { to: "/normas", label: "Normas y guías" },
-                { to: "/formacion-autodidacta", label: "Formación autodidacta" },
-              ]}
-            />
+            <MobileDropdown menu="recursos electrónicos" links={[{ to: "/base-de-datos", label: "Base de datos" }, { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" }, { to: "/revistas-electronicas", label: "Revistas electrónicas" }, { to: "/ebooks", label: "E-books" }, { to: "/diccionarios", label: "Diccionarios" }, { to: "/normas", label: "Normas y guías" }, { to: "/formacion-autodidacta", label: "Formación autodidacta" }]}/>
             <NavLink to="/catalogo" label="CATÁLOGO" />
             <NavLink to="/ayuda" label="AYUDA" />
           </motion.div>
