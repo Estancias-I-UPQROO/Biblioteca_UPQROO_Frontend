@@ -47,7 +47,7 @@ export const Footer = () => {
                         <div className="text-white font-bold space-y-5">
                             <h3 className="font-extrabold uppercase mb-5">Horario de atención</h3>
 
-                            <ul>
+                            <ul className="font-normal">
                                 <p>Lunes - Viernes:</p>
                                 <li>
                                     09:00 a.m. - 14:00 p.m.
@@ -57,7 +57,7 @@ export const Footer = () => {
                                 </li>
                             </ul>
 
-                            <ul>
+                            <ul className="font-normal">
                                 <p>Sábado - Domingo:</p>
                                 <li>Cerrado</li>
                             </ul>
@@ -66,7 +66,7 @@ export const Footer = () => {
                         <div className="text-white font-bold">
                             <h3 className="font-extrabold uppercase mb-5">Contactanos</h3>
 
-                            <ul className="space-y-5">
+                            <ul className="space-y-5 font-normal">
                                 <li>
                                     998 283 1859
                                 </li>
