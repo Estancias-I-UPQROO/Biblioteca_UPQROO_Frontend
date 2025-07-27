@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ Importa useNavigate
+import { useNavigate } from 'react-router-dom';
 
 export const Login: React.FC = () => {
   const unameRef = useRef<HTMLInputElement>(null);
@@ -11,6 +11,7 @@ export const Login: React.FC = () => {
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
   const [buttonPositionIndex, setButtonPositionIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const positions = [
     'translate-x-[-120%]',
@@ -19,7 +20,7 @@ export const Login: React.FC = () => {
     'translate-y-[150%]'
   ];
 
-  const navigate = useNavigate(); // ✅ Hook para redirección
+  const navigate = useNavigate();
 
   const showMsg = () => {
     const isEmpty = (unameRef.current?.value === '' || passRef.current?.value === '');
@@ -46,17 +47,46 @@ export const Login: React.FC = () => {
     setButtonPositionIndex((prevIndex) => (prevIndex + 1) % positions.length);
   };
 
-  // ✅ Maneja el envío del formulario y redirige
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const username = unameRef.current?.value;
     const password = passRef.current?.value;
 
-    if (username && password) {
-      navigate('/admin/dash'); // Cambia la ruta según tu app
-    } else {
+    if (!username || !password) {
       setMessage('Por favor, complete los campos antes de continuar');
       setMessageColor('rgb(218 49 49)');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:4000/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          Usuario: username,
+          Password: password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        navigate('/admin/dash');
+      } else {
+        setMessage(data.message || 'Credenciales inválidas');
+        setMessageColor('rgb(218 49 49)');
+      }
+    } catch (error) {
+      console.error('Error en login:', error);
+      setMessage('Error al conectar con el servidor.');
+      setMessageColor('rgb(218 49 49)');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,7 +114,6 @@ export const Login: React.FC = () => {
           <i className="fa fa-user text-[#a2a2a2]"></i>
         </div>
 
-        {/* ✅ Formulario con redirección */}
         <form
           className="flex flex-col p-6 pb-2.5 h-[440px] rounded-[30px] bg-black/70 border border-white/10
                      absolute w-full bottom-0 items-center"
@@ -130,18 +159,24 @@ export const Login: React.FC = () => {
             onTouchStart={shiftButton}
             ref={btnContainerRef}
           >
-            <input
-              type="submit"
-              id="login-btn"
-              value="Login"
-              className={`p-1.5 px-5 border-none bg-[#193e61] text-white font-semibold text-base
-                          rounded-[15px] transition-all duration-300 my-6
-                          ${areInputsEmpty ? positions[buttonPositionIndex] : 'translate-x-0 translate-y-0'}`}
-              ref={btnRef}
-              onMouseEnter={shiftButton}
-              onTouchStart={shiftButton}
-              disabled={areInputsEmpty}
-            />
+            {isLoading ? (
+              <div className="my-6 flex justify-center items-center">
+                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 border-t-[#ffffff] animate-spin"></div>
+              </div>
+            ) : (
+              <input
+                type="submit"
+                id="login-btn"
+                value="Login"
+                className={`p-1.5 px-5 border-none bg-[#193e61] text-white font-semibold text-base
+                            rounded-[15px] transition-all duration-300 my-6
+                            ${areInputsEmpty ? positions[buttonPositionIndex] : 'translate-x-0 translate-y-0'}`}
+                ref={btnRef}
+                onMouseEnter={shiftButton}
+                onTouchStart={shiftButton}
+                disabled={areInputsEmpty}
+              />
+            )}
           </div>
         </form>
       </div>

@@ -1,16 +1,25 @@
-import { useState, type ChangeEvent, useRef, useEffect  } from 'react';
+import { useState, type ChangeEvent, useRef, useEffect } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './Admindash.css';
+import { useResourceForm } from '../../../hooks/useResourceForm';
+import axios from 'axios';
+
+// Configuración de axios para la API
+const api = axios.create({
+  baseURL: 'http://localhost:4000/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 // --- TIPOS DE DATOS ---
-
 type HeroImage = {
   id: number;
-  url: string; // Para la previsualización
-  file?: File; // El archivo real
-  name: string; // Nombre del archivo
+  url: string;
+  file?: File;
+  name: string;
 };
 
 export type Evento = {
@@ -26,29 +35,36 @@ export type Evento = {
 };
 
 export type Recurso = {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  image: string; // Usado para la URL (previsualización o existente)
-  imageFile?: File; // El archivo de imagen subido
+  image: string;
+  imageFile?: File;
   siteLink: string;
   active: boolean;
 };
 
 type Categoria = {
-  id: number;
+  id: string;
   nombre: string;
   recursos: Recurso[];
+  active: boolean;
 };
 
-// --- DATOS INICIALES DE EJEMPLO ---
-const initialHeroImages: HeroImage[] = [
+export const AdminPanel = () => {
+  const formRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'inicio' | 'recursos'>('inicio');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // --- ESTADOS PARA LA SECCIÓN INICIO (MANTENIDOS SIN CAMBIOS) ---
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([
     { id: 1, url: 'https://preview.redd.it/vo9vm1fcqrp71.jpg?auto=webp&s=cb4016edf50a37cf06dbe9e975ed9410b253bff0', name: 'Imagen 1' },
     { id: 2, url: 'https://www.taisa-designer.com/wp-content/uploads/2019/09/anton-darius-thesollers-xYIuqpHD2oQ-unsplash.jpg', name: 'Imagen 2' },
     { id: 3, url: 'https://cf-assets.www.cloudflare.com/slt3lc6tev37/3HvNfky6HzFsLOx8cz4vdR/1c6801dde97ae3c8685553db5a4fb8ff/example-image-compressed-70-kb.jpeg', name: 'Imagen 3' },
-];
+  ]);
 
-const initialEventos: Evento[] = [
+  const [eventos, setEventos] = useState<Evento[]>([
     {
       id: 1,
       imagen: 'https://preview.redd.it/vo9vm1fcqrp71.jpg?auto=webp&s=cb4016edf50a37cf06dbe9e975ed9410b253bff0',
@@ -68,22 +84,121 @@ const initialEventos: Evento[] = [
         { texto: 'Horarios', imagenAsociada: '/ruta/a/imagen3.jpg' },
       ],
     },
-];
+  ]);
 
-export const AdminPanel = () => { 
-  
-  const formRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'inicio' | 'recursos'>('inicio');
- 
-  
-  // --- ESTADOS Y LÓGICA PARA LA SECCIÓN INICIO ---
-  const [heroImages, setHeroImages] = useState<HeroImage[]>(initialHeroImages);
-  const [eventos, setEventos] = useState<Evento[]>(initialEventos);
   const [editingEvento, setEditingEvento] = useState<Evento | null>(null);
   const [addingEvento, setAddingEvento] = useState<Partial<Evento> | null>(null);
 
-  
+  // --- ESTADOS PARA RECURSOS ELECTRÓNICOS ---
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [editingResource, setEditingResource] = useState<Recurso | null>(null);
+  const [showInactiveCategories, setShowInactiveCategories] = useState(false);
 
+  // Hook para el formulario de recursos
+  const {
+    register,
+    handleSubmit,
+    errors,
+    reset,
+    setValue,
+    watch,
+  } = useResourceForm();
+
+  const watchedImage = watch('image');
+
+  // Obtener todas las categorías
+  const fetchCategorias = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/categorias-recursos-electronicos/get-categorias');
+
+      const categoriasData = response.data.map((cat: any) => ({
+        id: cat.ID_Categoria_Recursos_Electronicos,
+        nombre: cat.Nombre,
+        active: cat.Activo,
+        recursos: []
+      }));
+
+      setCategorias(categoriasData);
+
+      // Establecer la primera categoría activa como activa por defecto
+      const primeraCategoriaActiva = categoriasData.find((cat: any) => cat.active);
+      if (primeraCategoriaActiva) {
+        setActiveCategory(primeraCategoriaActiva.id);
+      }
+    } catch (err) {
+      setError('Error al cargar las categorías');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Obtener recursos de una categoría específica
+  const fetchRecursos = async (categoriaId: string) => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/recursos-electronicos/get-recursos/${categoriaId}`);
+
+      setCategorias(prev => prev.map(cat =>
+        cat.id === categoriaId
+          ? {
+            ...cat,
+            recursos: response.data.map((rel: any) => ({
+              id: rel.Recursos_Electronicos.ID_Recurso_Electronico,
+              title: rel.Recursos_Electronicos.Nombre,
+              description: rel.Recursos_Electronicos.Descripcion,
+              image: rel.Recursos_Electronicos.Imagen_URL,
+              siteLink: rel.Recursos_Electronicos.Enlace_Pagina,
+              active: rel.Recursos_Electronicos.Activo
+            }))
+          }
+          : cat
+      ));
+    } catch (err) {
+      setError('Error al cargar los recursos');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar categorías al cambiar a la pestaña de recursos
+  useEffect(() => {
+    if (activeTab === 'recursos') {
+      fetchCategorias();
+    }
+  }, [activeTab, showInactiveCategories]);
+
+  // Cargar recursos cuando cambia la categoría activa
+  useEffect(() => {
+    if (activeTab === 'recursos' && activeCategory) {
+      fetchRecursos(activeCategory);
+    }
+  }, [activeTab, activeCategory]);
+
+  // Effect para poblar el formulario cuando se edita un recurso
+  useEffect(() => {
+    if (editingResource) {
+      reset({
+        title: editingResource.title,
+        description: editingResource.description,
+        image: editingResource.image,
+        siteLink: editingResource.siteLink,
+      });
+    } else {
+      reset({
+        title: '',
+        description: '',
+        image: '',
+        siteLink: '',
+      });
+    }
+  }, [editingResource, reset]);
+
+  // --- HANDLERS PARA LA SECCIÓN INICIO (MANTENIDOS SIN CAMBIOS) ---
   const handleHeroImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -109,7 +224,7 @@ export const AdminPanel = () => {
     setAddingEvento(null);
     setEditingEvento({ ...evento, botones: evento.botones ? [...evento.botones] : [] });
   };
-  
+
   const handleShowAddEventoForm = () => {
     setEditingEvento(null);
     setAddingEvento({
@@ -134,7 +249,6 @@ export const AdminPanel = () => {
       setAddingEvento(null);
     }
   };
-
 
   const handleUpdateEvento = () => {
     if (editingEvento) {
@@ -161,26 +275,26 @@ export const AdminPanel = () => {
 
   const handleEventoImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        const imageUrl = URL.createObjectURL(file);
-        
-        if (editingEvento) {
-            setEditingEvento({
-                ...editingEvento,
-                imagen: imageUrl,
-                imagenFile: file,
-            });
-        } else if (addingEvento) {
-            setAddingEvento({
-                ...addingEvento,
-                imagen: imageUrl,
-                imagenFile: file,
-            });
-        }
+      const file = e.target.files[0];
+      const imageUrl = URL.createObjectURL(file);
+
+      if (editingEvento) {
+        setEditingEvento({
+          ...editingEvento,
+          imagen: imageUrl,
+          imagenFile: file,
+        });
+      } else if (addingEvento) {
+        setAddingEvento({
+          ...addingEvento,
+          imagen: imageUrl,
+          imagenFile: file,
+        });
+      }
     }
   };
 
-    const addBotonToForm = () => {
+  const addBotonToForm = () => {
     const nuevoBoton = { texto: '', imagenAsociada: '' };
     if (editingEvento) {
       const newBotones = [...(editingEvento.botones || []), nuevoBoton];
@@ -190,7 +304,8 @@ export const AdminPanel = () => {
       setAddingEvento({ ...addingEvento, botones: newBotones });
     }
   };
-    const removeBotonFromForm = (btnIndex: number) => {
+
+  const removeBotonFromForm = (btnIndex: number) => {
     if (editingEvento && editingEvento.botones) {
       const filteredBotones = editingEvento.botones.filter((_, index) => index !== btnIndex);
       setEditingEvento({ ...editingEvento, botones: filteredBotones });
@@ -199,139 +314,200 @@ export const AdminPanel = () => {
       setAddingEvento({ ...addingEvento, botones: filteredBotones });
     }
   };
+
   const handleBotonTextChange = (index: number, value: string) => {
     if (editingEvento) {
-        const updatedBotones = [...editingEvento.botones];
-        updatedBotones[index].texto = value;
-        setEditingEvento({...editingEvento, botones: updatedBotones});
+      const updatedBotones = [...editingEvento.botones];
+      updatedBotones[index].texto = value;
+      setEditingEvento({ ...editingEvento, botones: updatedBotones });
     } else if (addingEvento) {
-        const updatedBotones = [...(addingEvento.botones || [])];
-        updatedBotones[index].texto = value;
-        setAddingEvento({...addingEvento, botones: updatedBotones});
+      const updatedBotones = [...(addingEvento.botones || [])];
+      updatedBotones[index].texto = value;
+      setAddingEvento({ ...addingEvento, botones: updatedBotones });
     }
-  }
+  };
+
   const handleBotonImageChange = (index: number, file: File | null) => {
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = () => {
-        const imageUrl = reader.result as string;
-        if (editingEvento) {
-            const updatedBotones = [...editingEvento.botones];
-            updatedBotones[index].imagenAsociada = imageUrl;
-            setEditingEvento({...editingEvento, botones: updatedBotones});
-        } else if (addingEvento) {
-            const updatedBotones = [...(addingEvento.botones || [])];
-            updatedBotones[index].imagenAsociada = imageUrl;
-            setAddingEvento({...addingEvento, botones: updatedBotones});
-        }
+      const imageUrl = reader.result as string;
+      if (editingEvento) {
+        const updatedBotones = [...editingEvento.botones];
+        updatedBotones[index].imagenAsociada = imageUrl;
+        setEditingEvento({ ...editingEvento, botones: updatedBotones });
+      } else if (addingEvento) {
+        const updatedBotones = [...(addingEvento.botones || [])];
+        updatedBotones[index].imagenAsociada = imageUrl;
+        setAddingEvento({ ...addingEvento, botones: updatedBotones });
+      }
     };
     reader.readAsDataURL(file);
-  }
+  };
 
-  const settingsHero = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1, autoplay: true, fade: true, arrows: false };
-  const settingsEvents = { dots: true, infinite: false, speed: 500, slidesToShow: 3, slidesToScroll: 1, arrows: true, responsive: [{ breakpoint: 768, settings: { slidesToShow: 1 } }] };
-
-  // --- ESTADOS Y LÓGICA PARA RECURSOS ELECTRÓNICOS ---
-  const [categorias, setCategorias] = useState<Categoria[]>([
-    { id: 1, nombre: 'Base de datos', recursos: [{ id: 1, title: 'Chicago Journal', description: 'Base de datos académica con publicaciones científicas', image: '/Chicago_Journal.png', siteLink: 'https://www.journals.uchicago.edu/', active: true }] },
-    { id: 2, nombre: 'Bibliotecas digitales', recursos: [{ id: 1, title: 'Biblioteca Digital Mundial', description: 'Recursos culturales de todo el mundo', image: '/digital-library.jpg', siteLink: 'https://www.wdl.org/', active: true }] },
-    { id: 3, nombre: 'Revistas electrónicas', recursos: [{ id: 1, title: 'Nature Journal', description: 'Revista científica de alto impacto', image: '/nature-journal.jpg', siteLink: 'https://www.nature.com/', active: true }] },
-    { id: 4, nombre: 'E-books', recursos: [{ id: 1, title: 'Project Gutenberg', description: 'Libros electrónicos gratuitos', image: '/gutenberg.jpg', siteLink: 'https://www.gutenberg.org/', active: true }] },
-    { id: 5, nombre: 'Diccionarios', recursos: [{ id: 1, title: 'RAE Diccionario', description: 'Diccionario de la Real Academia Española', image: '/rae.jpg', siteLink: 'https://dle.rae.es/', active: true }] },
-    { id: 6, nombre: 'Normas y guías', recursos: [{ id: 1, title: 'ISO Standards', description: 'Normas internacionales ISO', image: '/iso-standards.jpg', siteLink: 'https://www.iso.org/', active: true }] },
-  ]);
-
-  const [activeCategory, setActiveCategory] = useState(1);
-  
-  type NewResourceState = Omit<Recurso, 'id' | 'active'>;
-  
-  const [newResource, setNewResource] = useState<NewResourceState>({
-    title: '',
-    description: '',
-    image: '',
-    siteLink: '',
-    imageFile: undefined,
-  });
-
-  const [editingResource, setEditingResource] = useState<Recurso | null>(null);
-
+  // --- HANDLERS PARA RECURSOS ELECTRÓNICOS ---
   const handleResourceImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const previewUrl = URL.createObjectURL(file);
+      setValue('image', previewUrl, { shouldValidate: true });
+
+      // ✅ Guardar imagen temporalmente sin afectar editingResource
+      setNewImageFile(file);
+    }
+  };
+
+  const handleEditButtonClick = (recurso: Recurso) => {
+    setEditingResource(recurso);
+  };
+
+  // Crear o actualizar un recurso
+  const onResourceSubmit = async (data: Omit<Recurso, 'id' | 'active'>) => {
+    if (!activeCategory) return;
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const formData = new FormData();
+      formData.append('Nombre', data.title);
+      formData.append('Descripcion', data.description);
+      formData.append('Enlace_Pagina', data.siteLink);
+
+      const fileToUpload = newImageFile ?? editingResource?.imageFile;
+      if (fileToUpload) {
+        formData.append('imagen', fileToUpload);
+      }
 
       if (editingResource) {
-        if (editingResource.image.startsWith('blob:')) {
-          URL.revokeObjectURL(editingResource.image);
-        }
-        setEditingResource({ ...editingResource, image: previewUrl, imageFile: file });
+        // Editar recurso existente
+        await api.put(
+          `/recursos-electronicos/update-recurso/${editingResource.id}/${activeCategory}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
       } else {
-        if (newResource.image.startsWith('blob:')) {
-          URL.revokeObjectURL(newResource.image);
-        }
-        setNewResource({ ...newResource, image: previewUrl, imageFile: file });
+        // Crear nuevo recurso
+        await api.post(
+          `/recursos-electronicos/create-recurso/${activeCategory}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
       }
-    }
-  };
 
-  const handleAddResource = () => {
-    if (newResource.title.trim() && newResource.siteLink.trim()) {
-      setCategorias(categorias.map(cat =>
-        cat.id === activeCategory
-          ? {
-              ...cat,
-              recursos: [
-                ...cat.recursos,
-                {
-                  ...newResource,
-                  id: Math.max(0, ...cat.recursos.map(r => r.id)) + 1,
-                  active: true
-                }
-              ]
-            }
-          : cat
-      ));
-      setNewResource({ title: '', description: '', image: '', siteLink: '', imageFile: undefined });
-    }
-  };
-
-  const handleUpdateResource = () => {
-    if (editingResource) {
-      setCategorias(categorias.map(cat =>
-        cat.id === activeCategory
-          ? {
-              ...cat,
-              recursos: cat.recursos.map(res =>
-                res.id === editingResource.id ? { ...editingResource } : res
-              )
-            }
-          : cat
-      ));
+      await fetchRecursos(activeCategory);
       setEditingResource(null);
+      reset();
+    } catch (err) {
+      setError('Error al guardar el recurso');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteResource = (id: number) => {
-    setCategorias(categorias.map(cat => {
-      if (cat.id === activeCategory) {
-        const resourceToDelete = cat.recursos.find(res => res.id === id);
-        if (resourceToDelete && resourceToDelete.image.startsWith('blob:')) {
-          URL.revokeObjectURL(resourceToDelete.image);
-        }
-        return {
-          ...cat,
-          recursos: cat.recursos.filter(res => res.id !== id)
-        };
+  // Eliminar (desactivar) un recurso
+  const handleDeleteResource = async (id: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/recursos-electronicos/delete-recurso/${id}`);
+      await fetchRecursos(activeCategory!);
+
+      if (editingResource && editingResource.id === id) {
+        setEditingResource(null);
+        reset();
       }
-      return cat;
-    }));
+    } catch (err) {
+      setError('Error al eliminar el recurso');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Restaurar (activar) un recurso
+  const handleRestoreResource = async (id: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/recursos-electronicos/restore-recurso/${id}`);
+      await fetchRecursos(activeCategory!);
+    } catch (err) {
+      setError('Error al restaurar el recurso');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Crear una nueva categoría
+  const handleCreateCategory = async (nombre: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      await api.post('/categorias-recursos-electronicos/create-categoria', { Nombre: nombre });
+      await fetchCategorias();
+    } catch (err) {
+      setError('Error al crear la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Eliminar (desactivar) una categoría
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/categorias-recursos-electronicos/delete-categoria/${id}`);
+      await fetchCategorias();
+
+      // Si la categoría activa fue eliminada, seleccionar otra
+      if (activeCategory === id) {
+        const nuevaCategoriaActiva = categorias.find(cat => cat.id !== id && cat.active);
+        setActiveCategory(nuevaCategoriaActiva?.id || null);
+      }
+    } catch (err) {
+      setError('Error al eliminar la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Restaurar (activar) una categoría
+  const handleRestoreCategory = async (id: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/categorias-recursos-electronicos/restore-categoria/${id}`);
+      await fetchCategorias();
+    } catch (err) {
+      setError('Error al restaurar la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Configuraciones para los sliders
+  const settingsHero = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1, autoplay: true, fade: true, arrows: false };
+  const settingsEvents = { dots: true, infinite: false, speed: 500, slidesToShow: 3, slidesToScroll: 1, arrows: true, responsive: [{ breakpoint: 768, settings: { slidesToShow: 1 } }] };
 
   const currentFormEvento = editingEvento || addingEvento;
 
-   useEffect(() => {
-    // Solo intenta hacer scroll si el formulario es visible Y la ref existe
+  useEffect(() => {
     if (currentFormEvento && formRef.current) {
       formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -339,199 +515,310 @@ export const AdminPanel = () => {
 
   return (
     <div className="admin-panel">
-        <div className="admin-sidebar">
-            <h2>Panel de Administración</h2>
-            <nav>
-                <button className={activeTab === 'inicio' ? 'active' : ''} onClick={() => setActiveTab('inicio')}>Inicio</button>
-                <button className={activeTab === 'recursos' ? 'active' : ''} onClick={() => setActiveTab('recursos')}>Recursos Electrónicos</button>
-            </nav>
-        </div>
-        <div className="admin-content">
-            {activeTab === 'inicio' ? (
-                <div className="inicio-admin-container">
-                    <h1>Administrar Página de Inicio</h1>
-                    <div className="admin-section">
-                        <h2>Slider Hero</h2>
-                        <div className="resource-form">
-                            <h3>Añadir Nueva Imagen</h3>
-                            <label htmlFor="hero-image-upload" className="file-upload-label">Seleccionar Archivo...</label>
-                            <input id="hero-image-upload" type="file" accept="image/*" onChange={handleHeroImageChange} style={{ display: 'none' }}/>
-                        </div>
-                        <div className="hero-images-list">
-                            {heroImages.map(image => (
-                                <div key={image.id} className="hero-image-item">
-                                    <img src={image.url} alt={image.name} />
-                                    <span>{image.name}</span>
-                                    <button onClick={() => handleDeleteHeroImage(image.id)}>Eliminar</button>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="preview-section">
-                            <h3>Vista Previa del Slider</h3>
-                            <div className="hero-preview-wrapper">
-                                <Slider {...settingsHero}>
-                                    {heroImages.map((image) => (
-                                        <div key={image.id}>
-                                            <img src={image.url} alt="Vista previa" className="hero-preview-image"/>
-                                        </div>
-                                    ))}
-                                </Slider>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="admin-section">
-                        <h2>Eventos</h2>
-                        <button 
-                            onClick={handleShowAddEventoForm} 
-                            className="btn-add-evento-ghost"> {/* <-- O esta otra clase */}
-                            Añadir Nuevo Evento
-                        </button>
-                        <div className="eventos-grid">
-                            {eventos.map((evento) => (
-                                <div key={evento.id} className="evento-card" onClick={() => handleSelectEventoForEditing(evento)}>
-                                    <img src={evento.imagen} alt={evento.titulo} />
-                                    <h4>{evento.titulo}</h4>
-                                    <div className="card-actions"><button>Editar</button></div>
-                                </div>
-                            ))}
-                        </div>
-                        {currentFormEvento && (
-                            <div ref={formRef} className="resource-form">
-                                <h3>{editingEvento ? `Editando Evento: ${currentFormEvento.titulo}`: 'Añadir Nuevo Evento'}</h3>
-                                {currentFormEvento.imagen && <img src={currentFormEvento.imagen} alt="Previsualización" className="form-image-preview" />}
-                                <label htmlFor="evento-image-upload" className="file-upload-label">Imagen del Evento...</label>
-                                <input name="titulo" type="text" placeholder="Título del evento" value={currentFormEvento.titulo} onChange={handleEventoFormChange} />
-                                <textarea name="descripcion" placeholder="Descripción" value={currentFormEvento.descripcion} onChange={handleEventoFormChange} />
-                                <input id="evento-image-upload" type="file" accept="image/*" onChange={handleEventoImageChange} style={{ display: 'none' }} />
-                                <h4></h4>
-                                {currentFormEvento.botones?.map((btn, index) => (
-                                <div key={index} className="boton-item">
-                                    <label htmlFor={`boton-image-${index}`} className="file-upload-label">
-                                        Imagen del Boton...
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Texto del botón"
-                                        value={btn.texto}
-                                        // CORREGIDO: Llama a la nueva función
-                                        onChange={(e) => handleBotonTextChange(index, e.target.value)}
-                                    />
-                                    
-                                    <input
-                                        id={`boton-image-${index}`}
-                                        type="file"
-                                        accept="image/*"
-                                        // CORREGIDO: Llama a la nueva función
-                                        onChange={(e) => handleBotonImageChange(index, e.target.files?.[0] || null)}
-                                        style={{ display: 'none' }}
-                                    />
-                                    {btn.imagenAsociada && <img src={btn.imagenAsociada} alt="Botón" className="form-image-preview-small" />}
-                                    <button onClick={() => removeBotonFromForm(index)}>Eliminar</button>
-                                </div>
-                                ))}
-                                <div className="form-actions">
-                                    <button onClick={addBotonToForm}>Agregar Botón</button>
-                                    {editingEvento ? (
-                                        <>
-                                            <button onClick={handleUpdateEvento}>Guardar Cambios</button>
-                                            <button onClick={() => setEditingEvento(null)} className="cancel">Cancelar</button>
-                                            <button onClick={() => handleDeleteEvento(editingEvento.id)} className="delete">Eliminar Evento</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button onClick={handleCreateEvento}>Crear Evento</button>
-                                            <button onClick={() => setAddingEvento(null)} className="cancel">Cancelar</button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                        <div className="preview-section">
-                            <h3>Vista Previa del Carrusel de Eventos</h3>
-                            <div className="event-preview-wrapper">
-                                <Slider {...settingsEvents}>
-                                    {eventos.map((evento) => (
-                                        <div key={evento.id} className="event-preview-card">
-                                            <img src={evento.imagen} alt={evento.titulo} />
-                                            <div className="slider-hover-box-preview">
-                                                <h3>{evento.titulo}</h3>
-                                                <p>Haz clic para más información</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </Slider>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <div className="recursos-admin">
-                    <div className="categories-sidebar">
-                        {categorias.map(categoria => (
-                            <button key={categoria.id} className={activeCategory === categoria.id ? 'active' : ''} onClick={() => {
-                                setActiveCategory(categoria.id);
-                                setEditingResource(null);
-                            }}>
-                                {categoria.nombre}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="recursos-content">
-                        <h2>Administrar {categorias.find(c => c.id === activeCategory)?.nombre}</h2>
-                        <div className="recursos-grid">
-                            {categorias.find(c => c.id === activeCategory)?.recursos.map(recurso => (
-                                <div key={recurso.id} className="resource-item">
-                                    <div className="recursos-card">
-                                        <div className="recursos-card-image-container">
-                                            <img src={recurso.image} alt={recurso.title} className="recursos-card-image" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-recursos.jpg'; }}/>
-                                            <div className="recursos-card-title-overlay">
-                                                <h3 className="recursos-card-title">{recurso.title}</h3>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="resource-controls">
-                                        <label>
-                                            <input type="checkbox" checked={recurso.active} onChange={(e) => {
-                                                setCategorias(categorias.map(cat => cat.id === activeCategory ? { ...cat, recursos: cat.recursos.map(res => res.id === recurso.id ? {...res, active: e.target.checked} : res) } : cat ));
-                                            }}/>
-                                            Activo
-                                        </label>
-                                        <button onClick={() => setEditingResource(recurso)}>Editar</button>
-                                        <button onClick={() => handleDeleteResource(recurso.id)}>Eliminar</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="resource-form">
-                            <h3>{editingResource ? 'Editar Recurso' : 'Añadir Nuevo Recurso'}</h3>
-                            <input type="text" placeholder="Título" value={editingResource ? editingResource.title : newResource.title} onChange={(e) => editingResource ? setEditingResource({...editingResource, title: e.target.value}) : setNewResource({...newResource, title: e.target.value}) }/>
-                            <textarea placeholder="Descripción" value={editingResource ? editingResource.description : newResource.description} onChange={(e) => editingResource ? setEditingResource({...editingResource, description: e.target.value}) : setNewResource({...newResource, description: e.target.value})}/>
-                            
-                            <div className="form-image-upload-container">
-                                <label htmlFor="resource-image-upload" className="file-upload-label">
-                                    {editingResource ? 'Cambiar Imagen...' : 'Seleccionar Imagen...'}
-                                </label>
-                                <input id="resource-image-upload" type="file" accept="image/*" onChange={handleResourceImageChange} style={{ display: 'none' }}/>
-                                
-                                {editingResource?.image && <img src={editingResource.image} alt="Previsualización" className="form-image-preview" />}
-                                {!editingResource && newResource.image && <img src={newResource.image} alt="Previsualización" className="form-image-preview" />}
-                            </div>
+      <div className="admin-sidebar">
+        <h2>Panel de Administración</h2>
+        <nav>
+          <button className={activeTab === 'inicio' ? 'active' : ''} onClick={() => setActiveTab('inicio')}>Inicio</button>
+          <button className={activeTab === 'recursos' ? 'active' : ''} onClick={() => setActiveTab('recursos')}>Recursos Electrónicos</button>
+        </nav>
+      </div>
+      <div className="admin-content">
+        {loading && <div className="loading-overlay">Cargando...</div>}
+        {error && <div className="error-message">{error}</div>}
 
-                            <input type="text" placeholder="Enlace al recurso" value={editingResource ? editingResource.siteLink : newResource.siteLink} onChange={(e) => editingResource ? setEditingResource({...editingResource, siteLink: e.target.value}) : setNewResource({...newResource, siteLink: e.target.value})}/>
-                            
-                            {editingResource ? (
-                                <div className="form-actions">
-                                    <button onClick={handleUpdateResource}>Actualizar</button>
-                                    <button onClick={() => setEditingResource(null)}>Cancelar</button>
-                                </div>
-                            ) : (
-                                <button onClick={handleAddResource}>Guardar Recurso</button>
-                            )}
-                        </div>
-                    </div>
+        {activeTab === 'inicio' ? (
+          /* SECCIÓN INICIO (MANTENIDA SIN CAMBIOS) */
+          <div className="inicio-admin-container">
+            <h1>Administrar Página de Inicio</h1>
+            <div className="admin-section">
+              <h2>Slider Hero</h2>
+              <div className="resource-form">
+                <h3>Añadir Nueva Imagen</h3>
+                <label htmlFor="hero-image-upload" className="file-upload-label">Seleccionar Archivo...</label>
+                <input id="hero-image-upload" type="file" accept="image/*" onChange={handleHeroImageChange} style={{ display: 'none' }} />
+              </div>
+              <div className="hero-images-list">
+                {heroImages.map(image => (
+                  <div key={image.id} className="hero-image-item">
+                    <img src={image.url} alt={image.name} />
+                    <span>{image.name}</span>
+                    <button onClick={() => handleDeleteHeroImage(image.id)}>Eliminar</button>
+                  </div>
+                ))}
+              </div>
+              <div className="preview-section">
+                <h3>Vista Previa del Slider</h3>
+                <div className="hero-preview-wrapper">
+                  <Slider {...settingsHero}>
+                    {heroImages.map((image) => (
+                      <div key={image.id}>
+                        <img src={image.url} alt="Vista previa" className="hero-preview-image" />
+                      </div>
+                    ))}
+                  </Slider>
                 </div>
-            )}
-        </div>
+              </div>
+            </div>
+            <div className="admin-section">
+              <h2>Eventos</h2>
+              <button
+                onClick={handleShowAddEventoForm}
+                className="btn-add-evento-ghost">
+                Añadir Nuevo Evento
+              </button>
+              <div className="eventos-grid">
+                {eventos.map((evento) => (
+                  <div key={evento.id} className="evento-card" onClick={() => handleSelectEventoForEditing(evento)}>
+                    <img src={evento.imagen} alt={evento.titulo} />
+                    <h4>{evento.titulo}</h4>
+                    <div className="card-actions"><button>Editar</button></div>
+                  </div>
+                ))}
+              </div>
+              {currentFormEvento && (
+                <div ref={formRef} className="resource-form">
+                  <h3>{editingEvento ? `Editando Evento: ${currentFormEvento.titulo}` : 'Añadir Nuevo Evento'}</h3>
+                  {currentFormEvento.imagen && <img src={currentFormEvento.imagen} alt="Previsualización" className="form-image-preview" />}
+                  <label htmlFor="evento-image-upload" className="file-upload-label">Imagen del Evento...</label>
+                  <input name="titulo" type="text" placeholder="Título del evento" value={currentFormEvento.titulo} onChange={handleEventoFormChange} />
+                  <textarea name="descripcion" placeholder="Descripción" value={currentFormEvento.descripcion} onChange={handleEventoFormChange} />
+                  <input id="evento-image-upload" type="file" accept="image/*" onChange={handleEventoImageChange} style={{ display: 'none' }} />
+                  <h4></h4>
+                  {currentFormEvento.botones?.map((btn, index) => (
+                    <div key={index} className="boton-item">
+                      <label htmlFor={`boton-image-${index}`} className="file-upload-label">
+                        Imagen del Boton...
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Texto del botón"
+                        value={btn.texto}
+                        onChange={(e) => handleBotonTextChange(index, e.target.value)}
+                      />
+                      <input
+                        id={`boton-image-${index}`}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleBotonImageChange(index, e.target.files?.[0] || null)}
+                        style={{ display: 'none' }}
+                      />
+                      {btn.imagenAsociada && <img src={btn.imagenAsociada} alt="Botón" className="form-image-preview-small" />}
+                      <button onClick={() => removeBotonFromForm(index)}>Eliminar</button>
+                    </div>
+                  ))}
+                  <div className="form-actions">
+                    <button onClick={addBotonToForm}>Agregar Botón</button>
+                    {editingEvento ? (
+                      <>
+                        <button onClick={handleUpdateEvento}>Guardar Cambios</button>
+                        <button onClick={() => setEditingEvento(null)} className="cancel">Cancelar</button>
+                        <button onClick={() => handleDeleteEvento(editingEvento.id)} className="delete">Eliminar Evento</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={handleCreateEvento}>Crear Evento</button>
+                        <button onClick={() => setAddingEvento(null)} className="cancel">Cancelar</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div className="preview-section">
+                <h3>Vista Previa del Carrusel de Eventos</h3>
+                <div className="event-preview-wrapper">
+                  <Slider {...settingsEvents}>
+                    {eventos.map((evento) => (
+                      <div key={evento.id} className="event-preview-card">
+                        <img src={evento.imagen} alt={evento.titulo} />
+                        <div className="slider-hover-box-preview">
+                          <h3>{evento.titulo}</h3>
+                          <p>Haz clic para más información</p>
+                        </div>
+                      </div>
+                    ))}
+                  </Slider>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* SECCIÓN RECURSOS ELECTRÓNICOS */
+          <div className="recursos-admin">
+            <div className="categories-sidebar">
+              <div className="categories-filter">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={showInactiveCategories}
+                    onChange={() => setShowInactiveCategories(!showInactiveCategories)}
+                  />
+                  Mostrar inactivas
+                </label>
+              </div>
+
+              {categorias
+                .filter(cat => showInactiveCategories || cat.active)
+                .map(categoria => (
+                  <div key={categoria.id} className="category-item-flex">
+                    <button
+                      className={`category-name-button ${activeCategory === categoria.id ? 'active' : ''}`}
+                      onClick={() => {
+                        setActiveCategory(categoria.id);
+                        setEditingResource(null);
+                        reset();
+                      }}
+                    >
+                      {categoria.nombre}
+                    </button>
+                    {categoria.active ? (
+                      <button
+                        className="category-action-button delete"
+                        onClick={() => handleDeleteCategory(categoria.id)}
+                      >
+                        Desactivar
+                      </button>
+                    ) : (
+                      <button
+                        className="category-action-button restore"
+                        onClick={() => handleRestoreCategory(categoria.id)}
+                      >
+                        Activar
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+              <div className="add-category-container">
+                <button
+                  className="add-category-btn"
+                  onClick={() => {
+                    const nombre = prompt('Ingrese el nombre de la nueva categoría:');
+                    if (nombre && nombre.trim()) {
+                      handleCreateCategory(nombre.trim());
+                    }
+                  }}
+                >
+                  + Añadir Categoría
+                </button>
+              </div>
+            </div>
+
+            <div className="recursos-content">
+              {activeCategory ? (
+                <>
+                  <h2>Administrar {categorias.find(c => c.id === activeCategory)?.nombre}</h2>
+                  <div className="recursos-grid">
+                    {categorias.find(c => c.id === activeCategory)?.recursos.map(recurso => (
+                      <div key={recurso.id} className="resource-item">
+                        <div className="recursos-card">
+                          <div className="recursos-card-image-container">
+                            <img
+                              src={recurso.image}
+                              alt={recurso.title}
+                              className="recursos-card-image"
+
+                            />
+                            <div className="recursos-card-title-overlay">
+                              <h3 className="recursos-card-title">{recurso.title}</h3>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="resource-controls-flex">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={recurso.active}
+                              onChange={(e) =>
+                                e.target.checked
+                                  ? handleRestoreResource(recurso.id)
+                                  : handleDeleteResource(recurso.id)
+                              }
+                            />
+                            <span>Activo</span>
+                          </label>
+                          <button
+                            className="edit-btn"
+                            onClick={() => handleEditButtonClick(recurso)}
+                          >
+                            Editar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Formulario de recursos */}
+                  <div className="resource-form">
+                    <h3>{editingResource ? 'Editar Recurso' : 'Añadir Nuevo Recurso'}</h3>
+                    <form onSubmit={handleSubmit(onResourceSubmit)}>
+                      <input
+                        type="text"
+                        placeholder="Título"
+                        {...register('title')}
+                        className={errors.title ? 'input-error' : ''}
+                      />
+                      {errors.title && <p className="error-message">{errors.title.message}</p>}
+
+                      <textarea
+                        placeholder="Descripción"
+                        {...register('description')}
+                        className={errors.description ? 'input-error' : ''}
+                      />
+                      {errors.description && <p className="error-message">{errors.description.message}</p>}
+
+                      <div className="form-image-upload-container">
+                        <label htmlFor="resource-image-upload" className="file-upload-label">
+                          {editingResource ? 'Cambiar Imagen...' : 'Seleccionar Imagen...'}
+                        </label>
+                        <input
+                          id="resource-image-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleResourceImageChange}
+                          style={{ display: 'none' }}
+                        />
+                        {watchedImage && (
+                          <img src={watchedImage} alt="Previsualización" className="form-image-preview" />
+                        )}
+                        {errors.image && <p className="error-message">{errors.image.message}</p>}
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder="Enlace al recurso"
+                        {...register('siteLink')}
+                        className={errors.siteLink ? 'input-error mt-7' : ''}
+                      />
+                      {errors.siteLink && <p className="error-message">{errors.siteLink.message}</p>}
+
+                      <div className="form-actions">
+                        {editingResource ? (
+                          <>
+                            <button type="submit">Actualizar</button>
+                            <button
+                              type="button"
+                              onClick={() => { setEditingResource(null); reset(); }}
+                              className="cancel-btn"
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <button type="submit">Guardar Recurso</button>
+                        )}
+                      </div>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="no-category-selected">
+                  <p>Seleccione una categoría para administrar sus recursos</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

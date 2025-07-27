@@ -285,6 +285,42 @@
   gap: 10px;
 }
 
+/* Admindash.css */
+/* Estilo para los inputs con error */
+.input-error {
+  border-color: #ff4d4f; /* Un rojo vibrante para el borde */
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2); /* Una sombra suave alrededor del input */
+  background-color: #fffafa; /* Un fondo muy ligero para dar un toque de advertencia */
+}
+
+/* Estilo para los mensajes de error */
+.error-message {
+  color: #ff4d4f; /* Color rojo para el texto de advertencia */
+  font-size: 0.85em; /* Tamaño de fuente ligeramente más pequeño */
+  margin-top: 5px; /* Espacio encima del mensaje */
+  margin-bottom: 10px; /* Espacio debajo del mensaje */
+  /* Puedes agregar negrita si quieres que resalte más */
+  /* font-weight: bold; */
+}
+
+/* Opcional: Estilo para inputs normales para asegurar uniformidad */
+.resource-form input[type="text"],
+.resource-form textarea {
+  border: 1px solid #d9d9d9; /* Borde predeterminado para inputs */
+  padding: 8px 12px;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box; /* Incluye padding y borde en el ancho total */
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Transición suave */
+}
+
+.resource-form input[type="text"]:focus,
+.resource-form textarea:focus {
+  outline: none;
+  border-color: #40a9ff; /* Color de borde al enfocar */
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); /* Sombra al enfocar */
+}
+
 .form-actions button.cancel {
   background: var(--neutral-color);
 }
@@ -652,7 +688,7 @@
 
 @media (max-width: 576px) {
   .recursos-grid {
-    grid-template-columns: repeat(2, 1fr); /* Una sola columna */
+    grid-template-columns: 1fr;
   }
 
   .resource-controls {
@@ -673,5 +709,110 @@
   .recursos-card-title {
     font-size: 0.9rem;
     padding: 0.75rem 0.5rem;
+  }
+}
+
+.category-item-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f8f8f8;
+  flex-direction: row;
+}
+
+.category-name-button {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.4rem 0.75rem;
+  font-size: 1rem;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-name-button.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.category-action-button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.category-action-button.delete {
+  background-color: #ef4444;
+  color: white;
+}
+
+.category-action-button.restore {
+  background-color: #10b981;
+  color: white;
+}
+
+@media (max-width: 600px) {
+  .category-item-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-name-button,
+  .category-action-button {
+    width: 100%;
+  }
+}
+
+.resource-controls-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.edit-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.edit-btn:hover {
+  background-color: #2563eb;
+}
+
+@media (max-width: 600px) {
+  .resource-controls-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .edit-btn {
+    width: 100%;
   }
 }
