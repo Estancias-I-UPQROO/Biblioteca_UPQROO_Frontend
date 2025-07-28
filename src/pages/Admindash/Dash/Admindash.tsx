@@ -332,19 +332,37 @@ const fetchSliderImages = async () => {
 
     formData.append('Titulo', evento.titulo);
     formData.append('Descripcion', evento.descripcion);
-    if (evento.imagenFile) formData.append('imagenEvento', evento.imagenFile);
 
-    const subeventosData = (evento.botones || []).map((b) => ({
-      Titulo: b.texto,
-      ID_SubEvento: b.ID_SubEvento ?? undefined
-    }));
-    formData.append('subeventos', JSON.stringify(subeventosData));
+    const subeventosData: any[] = [];
+    const imagenesParaSubeventos: File[] = [];
 
-    (evento.botones || []).forEach((b) => {
-      if (b.imagenAsociada instanceof File) {
-        formData.append('imagenesSubEventos', b.imagenAsociada);
+    evento.botones.forEach((boton, index) => {
+      const isNuevo = !boton.ID_SubEvento;
+
+      subeventosData.push({
+        Titulo: boton.texto,
+        ...(boton.ID_SubEvento ? { ID_SubEvento: boton.ID_SubEvento } : {})
+      });
+
+      // 🧠 SOLO SI es nuevo O tiene una imagen nueva, la añadimos
+      if (boton.imagenAsociada instanceof File) {
+        imagenesParaSubeventos.push(boton.imagenAsociada);
+      } else if (isNuevo) {
+        // 🔥 Error crítico: nuevo subevento sin imagen => backend no podrá crearlo correctamente
+        console.error('Subevento nuevo sin imagen. Este se ignorará por el backend.');
       }
     });
+
+    // Agregar al form en orden
+    for (const img of imagenesParaSubeventos) {
+      formData.append('imagenesSubEventos', img);
+    }
+
+    formData.append('subeventos', JSON.stringify(subeventosData));
+
+    if (evento.imagenFile) {
+      formData.append('imagenEvento', evento.imagenFile);
+    }
 
     try {
       await axios.put(
@@ -352,9 +370,9 @@ const fetchSliderImages = async () => {
         formData,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
       fetchEventos();
@@ -462,20 +480,15 @@ const fetchSliderImages = async () => {
   const handleBotonImageChange = (index: number, file: File | null) => {
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-
-      if (editingEvento) {
-        const updatedBotones = [...editingEvento.botones];
-        updatedBotones[index].imagenAsociada = file; // <-- guarda el File, no base64
-        setEditingEvento({ ...editingEvento, botones: updatedBotones });
-      } else if (addingEvento) {
-        const updatedBotones = [...(addingEvento.botones || [])];
-        updatedBotones[index].imagenAsociada = file;
-        setAddingEvento({ ...addingEvento, botones: updatedBotones });
-      }
-    };
-    reader.readAsDataURL(file);
+    if (editingEvento) {
+      const updatedBotones = [...editingEvento.botones];
+      updatedBotones[index].imagenAsociada = file;
+      setEditingEvento({ ...editingEvento, botones: updatedBotones });
+    } else if (addingEvento) {
+      const updatedBotones = [...(addingEvento.botones || [])];
+      updatedBotones[index].imagenAsociada = file;
+      setAddingEvento({ ...addingEvento, botones: updatedBotones });
+    }
   };
 
   // --- HANDLERS PARA RECURSOS ELECTRÓNICOS ---
