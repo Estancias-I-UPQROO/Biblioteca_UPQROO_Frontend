@@ -133,7 +133,9 @@ export const InicioPage = () => {
         <Slider {...settingsHero} className="hero-slider">
           {imagenesHero.map((src, idx) => (
             <div key={idx} className="slide-biblio">
+
               <img src={`http://localhost:4000${src.Imagen_URL}`} alt={`Imagen biblioteca ${idx}`} />
+
               <div className="slide-overlay"></div>
             </div>
           ))}
@@ -197,4 +199,3 @@ export const InicioPage = () => {
     </div>
   );
 };
-
