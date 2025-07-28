@@ -178,7 +178,10 @@ export const Navbar = () => {
       >
         <button
           onClick={handleClick}
-          className={`px-4 ${navItemClass(links[0]?.to || "")} flex items-center h-full relative z-10 cursor-pointer`}
+          className={`px-4 ${links.some((link) => location.pathname === link.to)
+              ? "text-orange-600 font-semibold border-b-2 border-orange-500"
+              : "text-gray-800 hover:text-orange-500 font-medium"
+            } flex items-center h-full relative z-10 cursor-pointer`}
         >
           {menu.toUpperCase()} <span className="ml-1">▾</span>
         </button>

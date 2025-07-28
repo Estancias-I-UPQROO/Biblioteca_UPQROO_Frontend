@@ -38,7 +38,6 @@ export const CategoriaPage = () => {
   const [loadingRecursos, setLoadingRecursos] = useState(true);
   const [loadingCategorias, setLoadingCategorias] = useState(true);
   const [errorRecursos, setErrorRecursos] = useState<string | null>(null);
-  const [errorCategorias, setErrorCategorias] = useState<string | null>(null);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
 
   // Obtener lista de categorías para mostrar el nombre de la categoría actual
@@ -53,8 +52,7 @@ export const CategoriaPage = () => {
         setCategorias(data);
         setLoadingCategorias(false);
       })
-      .catch((err) => {
-        setErrorCategorias(err.message || "Error al cargar categorías");
+      .catch(() => {
         setLoadingCategorias(false);
       });
   }, []);

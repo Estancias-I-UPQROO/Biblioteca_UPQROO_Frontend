@@ -29,6 +29,19 @@ export const RecursosElectronicosCard = ({
 
   const isExpanded = expandedCardIndex === index;
 
+  // Prevent scroll when modal is open (optional)
+  useEffect(() => {
+    if (isTouchDevice && isExpanded) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isTouchDevice, isExpanded]);
+
   const handleTouchExpand = () => {
     if (isTouchDevice) {
       setExpandedCardIndex(isExpanded ? null : index);
@@ -55,56 +68,11 @@ export const RecursosElectronicosCard = ({
     isExpanded ? 'blur-sm brightness-75' : 'brightness-90'
   }`;
 
-  // === MÓVIL ===
-  if (isTouchDevice) {
-    if (isExpanded) {
-      return (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={handleBackdropClick}
-        >
-          <div
-            className="bg-white rounded-2xl aspect-square w-full max-w-sm relative overflow-hidden recursos-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="recursos-card-image-container">
-              <img src={image} alt={title} className={imageClasses} />
-              <div className="recursos-card-title-overlay">
-                <h2 className="recursos-card-title">{title}</h2>
-              </div>
-              <div className="recursos-card-description-overlay">
-                <p className="recursos-card-description">{description}</p>
-                <Link
-                  to={siteLink}
-                  className="recursos-card-sitelink"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Visitar Sitio
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="recursos-card group" onClick={handleTouchExpand}>
-        <div className="recursos-card-image-container">
-          <img src={image} alt={title} className={imageClasses} loading="lazy" />
-          <div className="recursos-card-title-overlay">
-            <h2 className="recursos-card-title">{title}</h2>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // === PC ===
-  return (
-    <Link
+  // === Componente principal (siempre se renderiza en el grid) ===
+  const baseCard = (
+    <div
       className="recursos-card group"
-      to={siteLink}
+      onClick={isTouchDevice ? handleTouchExpand : undefined}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -113,12 +81,49 @@ export const RecursosElectronicosCard = ({
         <div className="recursos-card-title-overlay">
           <h2 className="recursos-card-title">{title}</h2>
         </div>
-        {isExpanded && (
+        {!isTouchDevice && isExpanded && (
           <div className="recursos-card-description-overlay">
             <p className="recursos-card-description">{description}</p>
           </div>
         )}
       </div>
-    </Link>
+    </div>
+  );
+
+  // === Modal flotante (solo para móvil y solo si está expandido) ===
+  const modal = isTouchDevice && isExpanded && (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white rounded-2xl aspect-square w-full max-w-sm relative overflow-hidden recursos-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="recursos-card-image-container">
+          <img src={image} alt={title} className={imageClasses} />
+          <div className="recursos-card-title-overlay">
+            <h2 className="recursos-card-title">{title}</h2>
+          </div>
+          <div className="recursos-card-description-overlay">
+            <p className="recursos-card-description">{description}</p>
+            <Link
+              to={siteLink}
+              className="recursos-card-sitelink"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Visitar Sitio
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {baseCard}
+      {modal}
+    </>
   );
 };
