@@ -1,3 +1,4 @@
+export { CategoriaPage } from "./CategoriaPage/CategoriaPage";
 export { BibliotecasDigitalesPage } from "./RecursosElectronicosPages/BibliotecasDigitalesPage/BibliotecasDigitalesPage";
 export { DiccionariosPage } from "./RecursosElectronicosPages/DiccionariosPage/DiccionariosPage";
 export { EbooksPage } from "./RecursosElectronicosPages/EbooksPage/EbooksPage";

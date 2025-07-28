@@ -327,42 +327,42 @@ export const AdminPanel = () => {
   };
 
   const actualizarEvento = async (evento: Evento) => {
-  const token = localStorage.getItem('token');
-  const formData = new FormData();
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
 
-  formData.append('Titulo', evento.titulo);
-  formData.append('Descripcion', evento.descripcion);
-  if (evento.imagenFile) formData.append('imagenEvento', evento.imagenFile);
+    formData.append('Titulo', evento.titulo);
+    formData.append('Descripcion', evento.descripcion);
+    if (evento.imagenFile) formData.append('imagenEvento', evento.imagenFile);
 
-  const subeventosData = (evento.botones || []).map((b) => ({
-    Titulo: b.texto,
-    ID_SubEvento: b.ID_SubEvento ?? undefined
-  }));
-  formData.append('subeventos', JSON.stringify(subeventosData));
+    const subeventosData = (evento.botones || []).map((b) => ({
+      Titulo: b.texto,
+      ID_SubEvento: b.ID_SubEvento ?? undefined
+    }));
+    formData.append('subeventos', JSON.stringify(subeventosData));
 
-  (evento.botones || []).forEach((b) => {
-    if (b.imagenAsociada instanceof File) {
-      formData.append('imagenesSubEventos', b.imagenAsociada);
-    }
-  });
-
-  try {
-    await axios.put(
-      `http://localhost:4000/api/eventos/update-evento/${evento.id}`,
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+    (evento.botones || []).forEach((b) => {
+      if (b.imagenAsociada instanceof File) {
+        formData.append('imagenesSubEventos', b.imagenAsociada);
       }
-    );
-    fetchEventos();
-    setEditingEvento(null);
-  } catch (err) {
-    console.error("Error al actualizar evento:", err);
-  }
-};
+    });
+
+    try {
+      await axios.put(
+        `http://localhost:4000/api/eventos/update-evento/${evento.id}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      fetchEventos();
+      setEditingEvento(null);
+    } catch (err) {
+      console.error("Error al actualizar evento:", err);
+    }
+  };
 
   const handleUpdateEvento = () => {
     if (editingEvento) {
@@ -492,6 +492,24 @@ export const AdminPanel = () => {
 
   const handleEditButtonClick = (recurso: Recurso) => {
     setEditingResource(recurso);
+  };
+
+  const handleEditCategoryName = async (id: string, currentName: string) => {
+    const nuevoNombre = prompt('Editar nombre de la categoría:', currentName);
+    if (!nuevoNombre || !nuevoNombre.trim()) return;
+
+    try {
+      setLoading(true);
+      await api.put(`/categorias-recursos-electronicos/update-categoria/${id}`, {
+        Nombre: nuevoNombre.trim()
+      });
+      await fetchCategorias();
+    } catch (err) {
+      setError('Error al actualizar la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Crear o actualizar un recurso
@@ -653,6 +671,15 @@ export const AdminPanel = () => {
           <button className={activeTab === 'inicio' ? 'active' : ''} onClick={() => setActiveTab('inicio')}>Inicio</button>
           <button className={activeTab === 'recursos' ? 'active' : ''} onClick={() => setActiveTab('recursos')}>Recursos Electrónicos</button>
         </nav>
+        <button
+          className="logout-button"
+          onClick={() => {
+            localStorage.removeItem('token');
+            window.location.href = '/admin/login';
+          }}
+        >
+          Cerrar Sesión
+        </button>
       </div>
       <div className="admin-content">
         {loading && <div className="loading-overlay">Cargando...</div>}
@@ -817,6 +844,15 @@ export const AdminPanel = () => {
                     >
                       {categoria.nombre}
                     </button>
+
+                    <button
+                      className="category-action-button edit"
+                      title="Editar nombre"
+                      onClick={() => handleEditCategoryName(categoria.id, categoria.nombre)}
+                    >
+                      ✏️
+                    </button>
+
                     {categoria.active ? (
                       <button
                         className="category-action-button delete"

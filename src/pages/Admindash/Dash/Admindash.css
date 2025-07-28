@@ -891,3 +891,16 @@ button.delete {
     margin-top: 6px;
   }
 }
+
+.logout-button {
+  margin-top: 2rem;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.logout-button:hover {
+  background-color: #c0392b;
+}

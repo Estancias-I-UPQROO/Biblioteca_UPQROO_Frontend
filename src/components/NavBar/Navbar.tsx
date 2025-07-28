@@ -3,24 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- HOOKS ADICIONALES PARA RESPONSIVE Y TOUCH ---
-
-/**
- * Hook para detectar si el ancho de la pantalla coincide con una media query.
- * @param query La media query de CSS a evaluar (ej. "(max-width: 1160px)")
- * @returns {boolean} True si la query coincide.
- */
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState<boolean>(false);
 
   useEffect(() => {
     const mediaQueryList = window.matchMedia(query);
-    // Establece el valor inicial
     setMatches(mediaQueryList.matches);
-    
-    // Escucha cambios en el tamaño de la ventana
     const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
-    
     mediaQueryList.addEventListener("change", listener);
     return () => mediaQueryList.removeEventListener("change", listener);
   }, [query]);
@@ -28,10 +17,6 @@ const useMediaQuery = (query: string): boolean => {
   return matches;
 };
 
-/**
- * Hook para detectar si el dispositivo es táctil.
- * @returns {boolean} True si es un dispositivo táctil.
- */
 const useIsTouchDevice = (): boolean => {
   const [isTouch, setIsTouch] = useState<boolean>(false);
   useEffect(() => {
@@ -41,10 +26,8 @@ const useIsTouchDevice = (): boolean => {
   return isTouch;
 };
 
-
 export const Navbar = () => {
   const location = useLocation();
-  // Hooks para detectar el tipo de dispositivo y tamaño de pantalla
   const isMobile = useMediaQuery("(max-width: 1160px)");
   const isTouchDevice = useIsTouchDevice();
 
@@ -57,9 +40,26 @@ export const Navbar = () => {
   const timeoutRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const [categoriaLinks, setCategoriaLinks] = useState<{ to: string; label: string }[]>([]);
+
   const [fakeResults, setFakeResults] = useState<{ id: number; title: string; image: string }[]>([]);
 
-  // Lógica de búsqueda (sin cambios)
+  // Fetch categorías desde la base de datos
+  useEffect(() => {
+    fetch("http://localhost:4000/api/categorias-recursos-electronicos/get-categorias")
+      .then((res) => res.json())
+      .then((data) => {
+        const links = data.map((cat: { ID_Categoria_Recursos_Electronicos: string; Nombre: string }) => ({
+          to: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
+          label: cat.Nombre,
+        }));
+        setCategoriaLinks(links);
+      })
+      .catch((err) => {
+        console.error("Error al cargar categorías:", err);
+      });
+  }, []);
+
   useEffect(() => {
     if (searchQuery.trim()) {
       setFakeResults([
@@ -72,7 +72,6 @@ export const Navbar = () => {
     }
   }, [searchQuery]);
 
-  // Efectos para cerrar menús (sin cambios)
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setActiveMenu(null);
@@ -91,30 +90,29 @@ export const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Efecto para enfocar búsqueda (sin cambios)
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [showSearch]);
-  
-  // Efecto para cerrar submenú de escritorio si se pasa a vista móvil
+
   useEffect(() => {
     if (isMobile) {
       setActiveMenu(null);
     }
   }, [isMobile]);
 
-  // Funciones de utilidad (sin cambios)
   const clearTimeout = () => {
     if (timeoutRef.current !== null) {
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
   };
+
   const handleSmoothScroll = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -123,7 +121,6 @@ export const Navbar = () => {
     setShowSearch(false);
   };
 
-  // Estilos (sin cambios)
   const navItemClass = (path: string) =>
     location.pathname === path
       ? "text-orange-600 font-semibold border-b-2 border-orange-500"
@@ -133,8 +130,7 @@ export const Navbar = () => {
     location.pathname === path
       ? "text-orange-600 font-medium bg-gray-50"
       : "text-gray-700 hover:text-orange-500 hover:bg-gray-50";
-      
-  // Componentes internos
+
   const NavLink = ({ to, label }: { to: string; label: string }) => (
     <div className="h-full flex items-center">
       <Link
@@ -154,7 +150,6 @@ export const Navbar = () => {
   const DesktopDropdown = ({ menu, links }: { menu: string; links: { to: string; label: string }[] }) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Activa el hover solo en dispositivos NO táctiles
     const handleMouseEnter = () => {
       if (!isTouchDevice) {
         clearTimeout();
@@ -162,7 +157,6 @@ export const Navbar = () => {
       }
     };
 
-    // Activa el leave solo en dispositivos NO táctiles
     const handleMouseLeave = () => {
       if (!isTouchDevice) {
         timeoutRef.current = window.setTimeout(() => {
@@ -170,8 +164,7 @@ export const Navbar = () => {
         }, 200);
       }
     };
-    
-    // Alterna el menú con un clic/tap (funciona para ambos)
+
     const handleClick = () => {
       setActiveMenu(activeMenu === menu ? null : menu);
     };
@@ -185,7 +178,10 @@ export const Navbar = () => {
       >
         <button
           onClick={handleClick}
-          className={`px-4 ${navItemClass(links[0].to)} flex items-center h-full relative z-10 cursor-pointer`}
+          className={`px-4 ${links.some((link) => location.pathname === link.to)
+              ? "text-orange-600 font-semibold border-b-2 border-orange-500"
+              : "text-gray-800 hover:text-orange-500 font-medium"
+            } flex items-center h-full relative z-10 cursor-pointer`}
         >
           {menu.toUpperCase()} <span className="ml-1">▾</span>
         </button>
@@ -198,7 +194,7 @@ export const Navbar = () => {
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.15 }}
               className="absolute left-0 top-full mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50"
-              onMouseEnter={handleMouseEnter} // Mantiene el menú abierto si el cursor entra en él
+              onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
               {links.map(({ to, label }) => (
@@ -270,10 +266,8 @@ export const Navbar = () => {
         <Link to="/" className="flex items-center h-full z-10" onClick={handleSmoothScroll}>
           <img src="/public/Upqroo_Logo.png" alt="Logo" className="h-12 w-auto" />
         </Link>
-        
-        {/* RENDERIZADO CONDICIONAL: MÓVIL vs ESCRITORIO */}
+
         {isMobile ? (
-          // --- VISTA MÓVIL (Botón de hamburguesa) ---
           <button
             className="p-1 hover:bg-gray-100 transition-colors duration-150"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -283,34 +277,74 @@ export const Navbar = () => {
             {isMobileMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
           </button>
         ) : (
-          // --- VISTA ESCRITORIO (Menú completo) ---
-          <div className="flex items-center gap-1">
-            <div className="relative" ref={searchRef}>
+          <div className="flex items-center gap-1 flex-nowrap">
+            <div className="relative" ref={searchRef} style={{ minWidth: 0 }}>
               {showSearch ? (
-                <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 200 }} exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.2 }}>
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 200 }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ minWidth: 200, maxWidth: 200 }}
+                >
                   <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500 bg-white w-[200px] px-2 py-1">
-                    <input ref={searchInputRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar..." className="w-full text-sm focus:outline-none" />
-                    <button type="submit" className="text-orange-500 hover:text-orange-700 p-1"><Search size={18} /></button>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar..."
+                      className="w-full text-sm focus:outline-none"
+                    />
+                    <button type="submit" className="text-orange-500 hover:text-orange-700 p-1">
+                      <Search size={18} />
+                    </button>
                   </form>
                 </motion.div>
               ) : (
-                <button onClick={() => setShowSearch(true)} className="p-1 text-gray-700 hover:text-orange-500" aria-label="Buscar"><Search size={20} /></button>
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className="p-1 text-gray-700 hover:text-orange-500"
+                  aria-label="Buscar"
+                >
+                  <Search size={20} />
+                </button>
               )}
-              {/* Resultados de búsqueda para escritorio */}
               <AnimatePresence>
                 {showSearch && searchQuery.trim() && fakeResults.length > 0 && (
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="absolute top-full mt-2 w-[200px] bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto">
-                     {fakeResults.map((result) => ( <li key={result.id} className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3 list-none"> <img src={result.image} alt={result.title} className="w-10 h-10 object-cover rounded" /> <div className="max-w-[130px] break-words"><span className="font-medium text-gray-900">{result.title}</span></div></li> ))}
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="absolute top-full mt-2 w-[200px] bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto"
+                  >
+                    {fakeResults.map((result) => (
+                      <li
+                        key={result.id}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3 list-none"
+                      >
+                        <img src={result.image} alt={result.title} className="w-10 h-10 object-cover rounded" />
+                        <div className="max-w-[130px] break-words">
+                          <span className="font-medium text-gray-900">{result.title}</span>
+                        </div>
+                      </li>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            {/* Menú de navegación */}
+
             <div className="flex items-center h-full text-sm font-medium ml-2">
               <NavLink to="/" label="INICIO" />
-              <DesktopDropdown menu="acerca de nosotros" links={[{ to: "/filosofia", label: "Filosofía" }, { to: "/lineamientos", label: "Lineamientos" }]} />
+              <DesktopDropdown
+                menu="acerca de nosotros"
+                links={[
+                  { to: "/filosofia", label: "Filosofía" },
+                  { to: "/lineamientos", label: "Lineamientos" },
+                ]}
+              />
               <NavLink to="/servicios" label="SERVICIOS" />
-              <DesktopDropdown menu="recursos electrónicos" links={[{ to: "/base-de-datos", label: "Base de datos" }, { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" }, { to: "/revistas-electronicas", label: "Revistas electrónicas" }, { to: "/ebooks", label: "E-books" }, { to: "/diccionarios", label: "Diccionarios" }, { to: "/normas", label: "Normas y guías" }, { to: "/formacion-autodidacta", label: "Formación autodidacta" }]} />
+              <DesktopDropdown menu="recursos electrónicos" links={categoriaLinks} />
               <NavLink to="/catalogo" label="CATÁLOGO" />
               <NavLink to="/ayuda" label="AYUDA" />
             </div>
@@ -318,7 +352,6 @@ export const Navbar = () => {
         )}
       </div>
 
-      {/* MENÚ MÓVIL DESPLEGABLE */}
       <AnimatePresence>
         {isMobile && isMobileMenuOpen && (
           <motion.div
@@ -328,26 +361,55 @@ export const Navbar = () => {
             transition={{ duration: 0.2 }}
             className="bg-white border-t border-gray-200 px-4 pt-2 pb-4 space-y-2 overflow-hidden"
           >
-            {/* Barra de búsqueda para móvil */}
             <div className="relative">
               <form onSubmit={handleSearch} className="flex items-center border-b-2 border-orange-500 mb-3 bg-white px-2 py-1">
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar..." className="w-full text-sm focus:outline-none" />
-                <button type="submit" className="text-orange-500 hover:text-orange-700 p-1"><Search size={18} /></button>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar..."
+                  className="w-full text-sm focus:outline-none"
+                />
+                <button type="submit" className="text-orange-500 hover:text-orange-700 p-1">
+                  <Search size={18} />
+                </button>
               </form>
-              {/* Resultados de búsqueda para móvil */}
               <AnimatePresence>
                 {searchQuery.trim() && fakeResults.length > 0 && (
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="mt-2 bg-white border rounded shadow-md z-40 max-h-72 overflow-y-auto absolute w-full">
-                     <ul className="text-sm text-gray-800"> {fakeResults.map((result) => ( <li key={result.id} className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"> <img src={result.image} alt={result.title} className="w-10 h-10 object-cover rounded" /> <div className="flex-1 min-w-0 break-words"><span className="font-medium text-gray-900">{result.title}</span></div></li> ))}</ul>
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="mt-2 bg-white border rounded shadow-md z-40 max-h-72 overflow-y-auto absolute w-full"
+                  >
+                    <ul className="text-sm text-gray-800">
+                      {fakeResults.map((result) => (
+                        <li
+                          key={result.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                        >
+                          <img src={result.image} alt={result.title} className="w-10 h-10 object-cover rounded" />
+                          <div className="flex-1 min-w-0 break-words">
+                            <span className="font-medium text-gray-900">{result.title}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            {/* Navegación móvil */}
+
             <NavLink to="/" label="INICIO" />
-            <MobileDropdown menu="acerca de nosotros" links={[{ to: "/filosofia", label: "Filosofía" }, { to: "/lineamientos", label: "Lineamientos" }]} />
+            <MobileDropdown
+              menu="acerca de nosotros"
+              links={[
+                { to: "/filosofia", label: "Filosofía" },
+                { to: "/lineamientos", label: "Lineamientos" },
+              ]}
+            />
             <NavLink to="/servicios" label="SERVICIOS" />
-            <MobileDropdown menu="recursos electrónicos" links={[{ to: "/base-de-datos", label: "Base de datos" }, { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" }, { to: "/revistas-electronicas", label: "Revistas electrónicas" }, { to: "/ebooks", label: "E-books" }, { to: "/diccionarios", label: "Diccionarios" }, { to: "/normas", label: "Normas y guías" }, { to: "/formacion-autodidacta", label: "Formación autodidacta" }]} />
+            <MobileDropdown menu="recursos electrónicos" links={categoriaLinks} />
             <NavLink to="/catalogo" label="CATÁLOGO" />
             <NavLink to="/ayuda" label="AYUDA" />
           </motion.div>

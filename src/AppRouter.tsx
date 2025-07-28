@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainAdmin } from "./layouts/MainLayout/MainAdmin";
 import { MainLayout } from "./layouts";
-import { LineamientosPage, BaseDeDatosPage, BibliotecasDigitalesPage, DiccionariosPage, EbooksPage, 
-         FilosofiaPage, InicioPage, SugerenciasMaterial,
-         Renovacion, NormasPage, RevistasElectronicasPage, AyudaPage, ServiciosBiblioteca, Catalogo, AdminPanel, Login,   } from "./pages";
+import {
+    LineamientosPage, FilosofiaPage, InicioPage, SugerenciasMaterial,
+    Renovacion, AyudaPage, ServiciosBiblioteca, Catalogo, AdminPanel, Login,
+    CategoriaPage
+} from "./pages";
 
 export const AppRouter = () => {
     return (
@@ -13,17 +15,12 @@ export const AppRouter = () => {
                     <Route index element={<InicioPage />} />
                     <Route path="/filosofia" element={<FilosofiaPage />} />
                     <Route path="/lineamientos" element={<LineamientosPage />} />
-                    <Route path="/base-de-datos" element={<BaseDeDatosPage />} />
-                    <Route path="/bibliotecas-digitales" element={<BibliotecasDigitalesPage />} />
-                    <Route path="/diccionarios" element={<DiccionariosPage />} />
-                    <Route path="/ebooks" element={<EbooksPage />} />
-                    <Route path="/normas" element={<NormasPage />} />
-                    <Route path="/revistas-electronicas" element={<RevistasElectronicasPage />} />
                     <Route path="/ayuda" element={<AyudaPage />} />
                     <Route path="/catalogo" element={< Catalogo />} />
                     <Route path="/servicios" element={<ServiciosBiblioteca />} />
                     <Route path="/renovacion" element={<Renovacion />} />
                     <Route path="/solicitud-compra" element={<SugerenciasMaterial />} />
+                    <Route path="/recursos-electronicos/:id_categoria" element={<CategoriaPage />} />
                 </Route>
                 <Route element={<MainAdmin />} >
                     <Route path="/admin/login" element={<Login/>} />
