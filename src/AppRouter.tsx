@@ -20,7 +20,7 @@ export const AppRouter = () => {
                     <Route path="/servicios" element={<ServiciosBiblioteca />} />
                     <Route path="/renovacion" element={<Renovacion />} />
                     <Route path="/solicitud-compra" element={<SugerenciasMaterial />} />
-                    <Route path="/categoria/:id_categoria" element={<CategoriaPage />} />
+                    <Route path="/recursos-electronicos/:id_categoria" element={<CategoriaPage />} />
                 </Route>
                 <Route element={<MainAdmin />} >
                     <Route path="/admin/login" element={<Login/>} />

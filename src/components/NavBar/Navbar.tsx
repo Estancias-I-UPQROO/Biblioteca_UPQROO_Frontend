@@ -3,8 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- HOOKS ADICIONALES PARA RESPONSIVE Y TOUCH ---
-
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState<boolean>(false);
 
@@ -42,7 +40,25 @@ export const Navbar = () => {
   const timeoutRef = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const [categoriaLinks, setCategoriaLinks] = useState<{ to: string; label: string }[]>([]);
+
   const [fakeResults, setFakeResults] = useState<{ id: number; title: string; image: string }[]>([]);
+
+  // Fetch categorías desde la base de datos
+  useEffect(() => {
+    fetch("http://localhost:4000/api/categorias-recursos-electronicos/get-categorias")
+      .then((res) => res.json())
+      .then((data) => {
+        const links = data.map((cat: { ID_Categoria_Recursos_Electronicos: string; Nombre: string }) => ({
+          to: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
+          label: cat.Nombre,
+        }));
+        setCategoriaLinks(links);
+      })
+      .catch((err) => {
+        console.error("Error al cargar categorías:", err);
+      });
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -325,18 +341,7 @@ export const Navbar = () => {
                 ]}
               />
               <NavLink to="/servicios" label="SERVICIOS" />
-              <DesktopDropdown
-                menu="recursos electrónicos"
-                links={[
-                  { to: "/base-de-datos", label: "Base de datos" },
-                  { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
-                  { to: "/revistas-electronicas", label: "Revistas electrónicas" },
-                  { to: "/ebooks", label: "E-books" },
-                  { to: "/diccionarios", label: "Diccionarios" },
-                  { to: "/normas", label: "Normas y guías" },
-                  { to: "/formacion-autodidacta", label: "Formación autodidacta" },
-                ]}
-              />
+              <DesktopDropdown menu="recursos electrónicos" links={categoriaLinks} />
               <NavLink to="/catalogo" label="CATÁLOGO" />
               <NavLink to="/ayuda" label="AYUDA" />
             </div>
@@ -401,18 +406,7 @@ export const Navbar = () => {
               ]}
             />
             <NavLink to="/servicios" label="SERVICIOS" />
-            <MobileDropdown
-              menu="recursos electrónicos"
-              links={[
-                { to: "/base-de-datos", label: "Base de datos" },
-                { to: "/bibliotecas-digitales", label: "Bibliotecas digitales" },
-                { to: "/revistas-electronicas", label: "Revistas electrónicas" },
-                { to: "/ebooks", label: "E-books" },
-                { to: "/diccionarios", label: "Diccionarios" },
-                { to: "/normas", label: "Normas y guías" },
-                { to: "/formacion-autodidacta", label: "Formación autodidacta" },
-              ]}
-            />
+            <MobileDropdown menu="recursos electrónicos" links={categoriaLinks} />
             <NavLink to="/catalogo" label="CATÁLOGO" />
             <NavLink to="/ayuda" label="AYUDA" />
           </motion.div>
