@@ -135,8 +135,6 @@ export const InicioPage = () => {
             <div key={idx} className="slide-biblio">
 
               <img src={`http://localhost:4000${src.Imagen_URL}`} alt={`Imagen biblioteca ${idx}`} />
-
-              <img src={src.Imagen_URL} alt={`Imagen biblioteca ${idx}`} />
               <div className="slide-overlay"></div>
             </div>
           ))}
@@ -200,3 +198,7 @@ export const InicioPage = () => {
     </div>
   );
 };
+<<<<<<<<< Temporary merge branch 1
+=========
+
+>>>>>>>>> Temporary merge branch 2
