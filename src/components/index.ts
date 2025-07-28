@@ -1,4 +1,4 @@
-export { Navbar } from "./NavBar/Navbar";
+export { Navbar } from "./Navbar/Navbar";
 export { ProtectedRoute } from "./ProtectedRoute";
 export { Footer } from "./Footer/Footer";
 export { RecursosElectronicosCard } from "./RecursosElectronicosCard/RecursosElectronicosCard";
