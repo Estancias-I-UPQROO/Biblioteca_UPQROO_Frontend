@@ -41,8 +41,7 @@ export const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [categoriaLinks, setCategoriaLinks] = useState<{ to: string; label: string }[]>([]);
-
-  const [fakeResults, setFakeResults] = useState<{ id: number; title: string; image: string }[]>([]);
+  
 
   // Fetch categorías desde la base de datos
   useEffect(() => {
@@ -60,17 +59,19 @@ export const Navbar = () => {
       });
   }, []);
 
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      setFakeResults([
-        { id: 2, title: searchQuery, image: "https://cdn.pixabay.com/photo/2023/03/12/20/37/road-7847795_960_720.jpg" },
-        { id: 3, title: `Resultado para ${searchQuery}`, image: "https://cdn.pixabay.com/photo/2017/08/30/01/05/milky-way-2695569_960_720.jpg" },
-        { id: 1, title: "Otro item", image: "https://cdn.pixabay.com/photo/2016/11/29/05/45/astronomy-1867616_960_720.jpg" },
-      ]);
-    } else {
-      setFakeResults([]);
-    }
-  }, [searchQuery]);
+  const searchSuggestions = [
+    { title: 'Renovación en línea', link: '/renovacion', type: 'servicio' },
+    { title: 'Sugerencias de material de compra', link: '/solicitud-compra', type: 'servicio' },
+    { title: 'Guía de uso de Digitalia Hispánica', link: '/guia_de_uso_digitalia_hispanica.pdf', type: 'ayuda' },
+    { title: 'Guía de Acceso a Pearson Higher Education', link: '/Guia_acceso_PHE.pdf', type: 'ayuda' },
+    { title: 'Lineamientos de la biblioteca', link: '/Lineamientos_para_el_funcionamiento_de_la_biblioteca_de_la_Universidad_Politecnica_de_Quintana_roo.pdf', type: 'lineamiento' }
+  ];
+
+  const filteredSuggestions = searchQuery.trim()
+    ? searchSuggestions.filter(s =>
+      s.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : [];
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -179,8 +180,8 @@ export const Navbar = () => {
         <button
           onClick={handleClick}
           className={`px-4 ${links.some((link) => location.pathname === link.to)
-              ? "text-orange-600 font-semibold border-b-2 border-orange-500"
-              : "text-gray-800 hover:text-orange-500 font-medium"
+            ? "text-orange-600 font-semibold border-b-2 border-orange-500"
+            : "text-gray-800 hover:text-orange-500 font-medium"
             } flex items-center h-full relative z-10 cursor-pointer`}
         >
           {menu.toUpperCase()} <span className="ml-1">▾</span>
@@ -311,24 +312,30 @@ export const Navbar = () => {
                 </button>
               )}
               <AnimatePresence>
-                {showSearch && searchQuery.trim() && fakeResults.length > 0 && (
+                {showSearch && filteredSuggestions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
                     className="absolute top-full mt-2 w-[200px] bg-white border rounded shadow-lg z-50 max-h-72 overflow-y-auto"
                   >
-                    {fakeResults.map((result) => (
-                      <li
-                        key={result.id}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3 list-none"
-                      >
-                        <img src={result.image} alt={result.title} className="w-10 h-10 object-cover rounded" />
-                        <div className="max-w-[130px] break-words">
-                          <span className="font-medium text-gray-900">{result.title}</span>
-                        </div>
-                      </li>
-                    ))}
+                    <ul>
+                      {filteredSuggestions.map((sug, idx) => (
+                        <li key={idx} className="px-3 py-2 hover:bg-gray-100 cursor-pointer list-none text-sm"
+                          onClick={() => {
+                            setShowSearch(false);
+                            setSearchQuery("");
+                            if (sug.link.endsWith(".pdf")) {
+                              window.open(sug.link, "_blank");
+                            } else {
+                              window.location.href = sug.link;
+                            }
+                          }}
+                        >
+                          {sug.title}
+                        </li>
+                      ))}
+                    </ul>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -375,7 +382,7 @@ export const Navbar = () => {
                 </button>
               </form>
               <AnimatePresence>
-                {searchQuery.trim() && fakeResults.length > 0 && (
+                {searchQuery.trim() && filteredSuggestions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -383,15 +390,21 @@ export const Navbar = () => {
                     className="mt-2 bg-white border rounded shadow-md z-40 max-h-72 overflow-y-auto absolute w-full"
                   >
                     <ul className="text-sm text-gray-800">
-                      {fakeResults.map((result) => (
+                      {filteredSuggestions.map((sug, idx) => (
                         <li
-                          key={result.id}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                          key={idx}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setSearchQuery("");
+                            if (sug.link.endsWith(".pdf")) {
+                              window.open(sug.link, "_blank");
+                            } else {
+                              window.location.href = sug.link;
+                            }
+                          }}
                         >
-                          <img src={result.image} alt={result.title} className="w-10 h-10 object-cover rounded" />
-                          <div className="flex-1 min-w-0 break-words">
-                            <span className="font-medium text-gray-900">{result.title}</span>
-                          </div>
+                          {sug.title}
                         </li>
                       ))}
                     </ul>
