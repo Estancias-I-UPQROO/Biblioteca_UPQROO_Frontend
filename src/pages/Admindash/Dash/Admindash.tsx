@@ -135,7 +135,7 @@ export const AdminPanel = () => {
               id: rel.Recursos_Electronicos.ID_Recurso_Electronico,
               title: rel.Recursos_Electronicos.Nombre,
               description: rel.Recursos_Electronicos.Descripcion,
-              image: rel.Recursos_Electronicos.Imagen_URL,
+              image: `http://localhost:4000${rel.Recursos_Electronicos.Imagen_URL}`,
               siteLink: rel.Recursos_Electronicos.Enlace_Pagina,
               active: rel.Recursos_Electronicos.Activo
             }))
@@ -245,19 +245,19 @@ export const AdminPanel = () => {
   };
 
 
-  const fetchSliderImages = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/slider-hero/get-sliders');
-      const data = response.data.map((item: any) => ({
-        id: item.ID_Slider_Hero,
-        url: item.Imagen_URL,
-        name: item.Imagen_URL.split('/').pop() || 'Imagen'
-      }));
-      setHeroImages(data);
-    } catch (err) {
-      console.error("Error al obtener imágenes del slider:", err);
-    }
-  };
+const fetchSliderImages = async () => {
+  try {
+    const response = await axios.get('http://localhost:4000/api/slider-hero/get-sliders');
+    const data = response.data.map((item: any) => ({
+      id: item.ID_Slider_Hero,
+      url: `http://localhost:4000${item.Imagen_URL}`, // <- Aquí se completa la URL
+      name: item.Imagen_URL.split('/').pop() || 'Imagen'
+    }));
+    setHeroImages(data);
+  } catch (err) {
+    console.error("Error al obtener imágenes del slider:", err);
+  }
+};
 
   // --- HANDLERS PARA LA SECCIÓN INICIO (MANTENIDOS SIN CAMBIOS) ---
   const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -820,13 +820,14 @@ export const AdminPanel = () => {
           <div className="recursos-admin">
             <div className="categories-sidebar">
               <div className="categories-filter">
-                <label>
+                <label className="custom-checkbox">
                   <input
                     type="checkbox"
                     checked={showInactiveCategories}
                     onChange={() => setShowInactiveCategories(!showInactiveCategories)}
                   />
-                  Mostrar inactivas
+                  <span className="checkmark"></span>
+                  <span className="checkbox-label">Mostrar categorías inactivas</span>
                 </label>
               </div>
 

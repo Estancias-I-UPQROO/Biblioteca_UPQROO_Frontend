@@ -104,7 +104,7 @@ export const CategoriaPage = () => {
                   key={recurso.ID_Recurso_Electronico}
                   title={recurso.Nombre}
                   description={recurso.Descripcion}
-                  image={recurso.Imagen_URL}
+                  image={`http://localhost:4000${recurso.Imagen_URL}`}
                   siteLink={recurso.Enlace_Pagina}
                   index={index}
                   expandedCardIndex={expandedCardIndex}
@@ -117,4 +117,4 @@ export const CategoriaPage = () => {
       </PageContainer>
     </>
   );
-};
+}; 
