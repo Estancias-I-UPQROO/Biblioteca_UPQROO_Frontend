@@ -41,7 +41,6 @@ export const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [categoriaLinks, setCategoriaLinks] = useState<{ to: string; label: string }[]>([]);
-  
 
   // Fetch categorías desde la base de datos
   useEffect(() => {
