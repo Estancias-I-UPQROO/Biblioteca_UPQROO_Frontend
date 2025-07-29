@@ -18,6 +18,7 @@ export const MainLayout = () => {
             />
             <LibraryAssistant />
             <Footer />
-        </>
-    )
+
+        </>
+    )
 }

@@ -31,7 +31,7 @@ type HeroImage = {
 };
 
 export type Evento = {
-  id: number;
+  id: string;
   imagen: string;
   imagenFile?: File;
   titulo: string;
@@ -130,16 +130,16 @@ export const AdminPanel = () => {
       setCategorias(prev => prev.map(cat =>
         cat.id === categoriaId
           ? {
-            ...cat,
-            recursos: response.data.map((rel: any) => ({
-              id: rel.Recursos_Electronicos.ID_Recurso_Electronico,
-              title: rel.Recursos_Electronicos.Nombre,
-              description: rel.Recursos_Electronicos.Descripcion,
-              image: rel.Recursos_Electronicos.Imagen_URL,
-              siteLink: rel.Recursos_Electronicos.Enlace_Pagina,
-              active: rel.Recursos_Electronicos.Activo
-            }))
-          }
+              ...cat,
+              recursos: response.data.map((rel: any) => ({
+                id: rel.Recursos_Electronicos.ID_Recurso_Electronico,
+                title: rel.Recursos_Electronicos.Nombre,
+                description: rel.Recursos_Electronicos.Descripcion,
+                image: `http://localhost:4000${rel.Recursos_Electronicos.Imagen_URL}`,
+                siteLink: rel.Recursos_Electronicos.Enlace_Pagina,
+                active: rel.Recursos_Electronicos.Activo
+              }))
+            }
           : cat
       ));
     } catch (err) {
@@ -152,24 +152,27 @@ export const AdminPanel = () => {
 
 
   const fetchEventos = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/eventos/get-eventos');
-      const data = response.data.map((e: any) => ({
+  try {
+    const response = await axios.get('http://localhost:4000/api/eventos/get-eventos');
+    const data = response.data.map((e: any) => {
+      return {
         id: e.ID_Evento,
-        imagen: e.Imagen_URL,
+        imagen: `http://localhost:4000${e.Imagen_URL}`, // Asegúrate de que esto sea una URL a una imagen
         titulo: e.Titulo,
         activo: e.Activo,
         descripcion: e.Descripcion,
         botones: (e.SubEventos || []).map((se: any) => ({
           texto: se.Titulo,
-          imagenAsociada: se.Imagen_URL
+          imagenAsociada: `http://localhost:4000${se.Imagen_URL}`
         }))
-      }));
-      setEventos(data);
-    } catch (err) {
-      console.error("Error al obtener eventos:", err);
-    }
-  };
+      };
+    });
+    setEventos(data);
+  } catch (err) {
+    console.error("Error al obtener eventos:", err);
+  }
+};
+
 
   useEffect(() => {
     if (activeTab === 'inicio') {
@@ -211,55 +214,7 @@ export const AdminPanel = () => {
     }
   }, [editingResource, reset]);
 
-  const subirEvento = async (evento: Partial<Evento>) => {
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-
-    formData.append('Titulo', evento.titulo!);
-    formData.append('Descripcion', evento.descripcion!);
-    if (evento.imagenFile) formData.append('imagenEvento', evento.imagenFile);
-
-    const subeventosData = (evento.botones || []).map(b => ({ Titulo: b.texto }));
-    formData.append('subeventos', JSON.stringify(subeventosData));
-    (evento.botones || []).forEach((b) => {
-      const blob = b.imagenAsociada instanceof File ? b.imagenAsociada : null;
-      if (blob) formData.append('imagenesSubEventos', blob);
-    });
-
-    try {
-      await axios.post(
-        'http://localhost:4000/api/eventos/create-evento',
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-      fetchEventos(); // refresca
-      setAddingEvento(null);
-    } catch (err) {
-      console.error("Error al crear evento:", err);
-    }
-  };
-
-
-  const fetchSliderImages = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/api/slider-hero/get-sliders');
-      const data = response.data.map((item: any) => ({
-        id: item.ID_Slider_Hero,
-        url: item.Imagen_URL,
-        name: item.Imagen_URL.split('/').pop() || 'Imagen'
-      }));
-      setHeroImages(data);
-    } catch (err) {
-      console.error("Error al obtener imágenes del slider:", err);
-    }
-  };
-
-  // --- HANDLERS PARA LA SECCIÓN INICIO (MANTENIDOS SIN CAMBIOS) ---
+   // --- HANDLERS PARA LA SECCIÓN INICIO (MANTENIDOS SIN CAMBIOS) ---
   const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -303,6 +258,58 @@ export const AdminPanel = () => {
     }
   };
 
+  const fetchSliderImages = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/slider-hero/get-sliders');
+      const data = response.data.map((item: any) => ({
+        id: item.ID_Slider_Hero,
+        url: `http://localhost:4000${item.Imagen_URL}`, // <- Aquí se completa la URL
+        name: item.Imagen_URL.split('/').pop() || 'Imagen'
+      }));
+      setHeroImages(data);
+    } catch (err) {
+      console.error("Error al obtener imágenes del slider:", err);
+    }
+  };
+  
+  // --- HANDLERS PARA EVENTOS ---
+  const subirEvento = async (evento: Partial<Evento>) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+
+    formData.append('Titulo', evento.titulo!);
+    formData.append('Descripcion', evento.descripcion!);
+    if (evento.imagenFile) formData.append('imagen', evento.imagenFile);
+
+    const subeventosData = (evento.botones || []).map(b => ({ Titulo: b.texto }));
+    formData.append('subeventos', JSON.stringify(subeventosData));
+    (evento.botones || []).forEach((b) => {
+      const blob = b.imagenAsociada instanceof File ? b.imagenAsociada : null;
+      if (blob) formData.append('subeventosImages', blob);
+    });
+
+    try {
+      await axios.post(
+        'http://localhost:4000/api/eventos/create-evento',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      fetchEventos(); // refresca
+      setAddingEvento(null);
+    } catch (err) {
+      console.error("Error al crear evento:", err);
+    }
+  };
+
+
+
+
+ 
   const handleSelectEventoForEditing = (evento: Evento) => {
     setAddingEvento(null);
     setEditingEvento({ ...evento, botones: evento.botones ? [...evento.botones] : [] });
@@ -332,37 +339,21 @@ export const AdminPanel = () => {
 
     formData.append('Titulo', evento.titulo);
     formData.append('Descripcion', evento.descripcion);
-
-    const subeventosData: any[] = [];
-    const imagenesParaSubeventos: File[] = [];
-
-    evento.botones.forEach((boton, index) => {
-      const isNuevo = !boton.ID_SubEvento;
-
-      subeventosData.push({
-        Titulo: boton.texto,
-        ...(boton.ID_SubEvento ? { ID_SubEvento: boton.ID_SubEvento } : {})
-      });
-
-      // 🧠 SOLO SI es nuevo O tiene una imagen nueva, la añadimos
-      if (boton.imagenAsociada instanceof File) {
-        imagenesParaSubeventos.push(boton.imagenAsociada);
-      } else if (isNuevo) {
-        // 🔥 Error crítico: nuevo subevento sin imagen => backend no podrá crearlo correctamente
-        console.error('Subevento nuevo sin imagen. Este se ignorará por el backend.');
-      }
-    });
-
-    // Agregar al form en orden
-    for (const img of imagenesParaSubeventos) {
-      formData.append('imagenesSubEventos', img);
+    if (evento.imagenFile) {
+      formData.append('imagen', evento.imagenFile); // ✅ nombre corregido
     }
 
+    const subeventosData = (evento.botones || []).map((b) => ({
+      Titulo: b.texto,
+      ID_SubEvento: b.ID_SubEvento ?? undefined
+    }));
     formData.append('subeventos', JSON.stringify(subeventosData));
 
-    if (evento.imagenFile) {
-      formData.append('imagenEvento', evento.imagenFile);
-    }
+    (evento.botones || []).forEach((b) => {
+      if (b.imagenAsociada instanceof File) {
+        formData.append('subeventosImages', b.imagenAsociada);
+      }
+    });
 
     try {
       await axios.put(
@@ -370,9 +361,9 @@ export const AdminPanel = () => {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
       fetchEventos();
@@ -388,31 +379,32 @@ export const AdminPanel = () => {
     }
   };
 
-  const handleDeleteEvento = async (id: number) => {
-    console.log(id);
+ const handleDeleteEvento = async (id: string) => { // ¡CAMBIADO A 'string'!
+  console.log(id);
 
-    try {
-      const token = localStorage.getItem('token');
-      await axios.patch(
-        `http://localhost:4000/api/eventos/delete-evento/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  try {
+    const token = localStorage.getItem('token');
+    
+    await axios.delete(
+      // La URL ya espera un string (UUID)
+      `http://localhost:4000/api/eventos/delete-evento/${id}`, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      setEventos(prevEventos =>
-        prevEventos.map(ev =>
-          ev.id === id ? { ...ev, activo: !ev.activo } : ev
-        )
-      );
+    // Aquí, 'ev.id' (string) se comparará con 'id' (string) - ¡Correcto!
+    setEventos(prevEventos => prevEventos.filter(ev => ev.id !== id));
 
-      // También actualizar el formulario en edición
-      if (editingEvento && editingEvento.id === id) {
-        setEditingEvento({ ...editingEvento, activo: !editingEvento.activo });
-      }
-    } catch (err) {
-      console.error("Error al eliminar evento:", err);
+    // Aquí, 'editingEvento.id' (string) se comparará con 'id' (string) - ¡Correcto!
+    if (editingEvento && editingEvento.id === id) {
+      setEditingEvento(null); 
     }
-  };
+
+    alert('Evento eliminado correctamente.');
+  } catch (err) {
+    console.error("Error al eliminar evento:", err);
+    alert('Hubo un error al eliminar el evento. Por favor, inténtalo de nuevo.');
+  }
+};
 
   const handleEventoFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -480,15 +472,20 @@ export const AdminPanel = () => {
   const handleBotonImageChange = (index: number, file: File | null) => {
     if (!file) return;
 
-    if (editingEvento) {
-      const updatedBotones = [...editingEvento.botones];
-      updatedBotones[index].imagenAsociada = file;
-      setEditingEvento({ ...editingEvento, botones: updatedBotones });
-    } else if (addingEvento) {
-      const updatedBotones = [...(addingEvento.botones || [])];
-      updatedBotones[index].imagenAsociada = file;
-      setAddingEvento({ ...addingEvento, botones: updatedBotones });
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+
+      if (editingEvento) {
+        const updatedBotones = [...editingEvento.botones];
+        updatedBotones[index].imagenAsociada = file; // <-- guarda el File, no base64
+        setEditingEvento({ ...editingEvento, botones: updatedBotones });
+      } else if (addingEvento) {
+        const updatedBotones = [...(addingEvento.botones || [])];
+        updatedBotones[index].imagenAsociada = file;
+        setAddingEvento({ ...addingEvento, botones: updatedBotones });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // --- HANDLERS PARA RECURSOS ELECTRÓNICOS ---
@@ -546,14 +543,15 @@ export const AdminPanel = () => {
       if (editingResource) {
         // Editar recurso existente
         await api.put(
-          `/recursos-electronicos/update-recurso/${editingResource.id}/${activeCategory}`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
+        `/recursos-electronicos/update-recurso/${editingResource.id}`, // ✅ solo este
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
       } else {
         // Crear nuevo recurso
         await api.post(
@@ -833,13 +831,14 @@ export const AdminPanel = () => {
           <div className="recursos-admin">
             <div className="categories-sidebar">
               <div className="categories-filter">
-                <label>
+                <label className="custom-checkbox">
                   <input
                     type="checkbox"
                     checked={showInactiveCategories}
                     onChange={() => setShowInactiveCategories(!showInactiveCategories)}
                   />
-                  Mostrar inactivas
+                  <span className="checkmark"></span>
+                  <span className="checkbox-label">Mostrar categorías inactivas</span>
                 </label>
               </div>
 

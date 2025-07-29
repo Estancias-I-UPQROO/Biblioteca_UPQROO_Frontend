@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   PageContainer,
   PageHeader,
   RecursosElectronicosCard,
   RecursosElectronicosGrid,
-} from "../../components"
+} from "../../components";
 
 type RelacionCategoriaRecurso = {
   ID_Rel_Categorias_Recursos_Electronicos: string;
@@ -28,38 +28,48 @@ type RelacionCategoriaRecurso = {
 type Categoria = {
   ID_Categoria_Recursos_Electronicos: string;
   Nombre: string;
+  Activo: boolean;
 };
 
 export const CategoriaPage = () => {
   const { id_categoria } = useParams<{ id_categoria: string }>();
+  const navigate = useNavigate();
 
   const [relaciones, setRelaciones] = useState<RelacionCategoriaRecurso[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [loadingRecursos, setLoadingRecursos] = useState(true);
-  const [loadingCategorias, setLoadingCategorias] = useState(true);
+  const [loadingCategoria, setLoadingCategoria] = useState(true);
   const [errorRecursos, setErrorRecursos] = useState<string | null>(null);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
 
-  // Obtener lista de categorías para mostrar el nombre de la categoría actual
+  // Verificar si la categoría existe y está activa
   useEffect(() => {
-    setLoadingCategorias(true);
-    fetch("http://localhost:4000/api/categorias-recursos-electronicos/get-categorias")
+    if (!id_categoria) return;
+
+    setLoadingCategoria(true);
+
+    fetch(`http://localhost:4000/api/categorias-recursos-electronicos/get-categoria/${id_categoria}`)
       .then(async (res) => {
         if (!res.ok) throw new Error(`Error ${res.status}`);
         return res.json();
       })
-      .then((data: Categoria[]) => {
-        setCategorias(data);
-        setLoadingCategorias(false);
+      .then((data: Categoria) => {
+        if (!data.Activo) {
+          navigate("/", { replace: true });
+          return;
+        }
+        setCategoria(data);
+        setLoadingCategoria(false);
       })
       .catch(() => {
-        setLoadingCategorias(false);
+        navigate("/", { replace: true }); // Si no existe, también redirige
       });
-  }, []);
+  }, [id_categoria, navigate]);
 
-  // Obtener recursos electrónicos relacionados a la categoría actual
+  // Obtener recursos electrónicos de la categoría
   useEffect(() => {
     if (!id_categoria) return;
+
     setLoadingRecursos(true);
     setErrorRecursos(null);
 
@@ -81,12 +91,11 @@ export const CategoriaPage = () => {
       });
   }, [id_categoria]);
 
-  const categoriaActual = categorias.find(cat => cat.ID_Categoria_Recursos_Electronicos === id_categoria);
-  const nombreCategoria = categoriaActual?.Nombre || "Categoría";
+  const nombreCategoria = categoria?.Nombre || "Categoría";
 
   return (
     <>
-      <PageHeader>{loadingCategorias ? "Cargando..." : nombreCategoria}</PageHeader>
+      <PageHeader>{loadingCategoria ? "Cargando..." : nombreCategoria}</PageHeader>
 
       <PageContainer>
         {loadingRecursos && <p className="text-center text-gray-600">Cargando recursos...</p>}
@@ -104,7 +113,7 @@ export const CategoriaPage = () => {
                   key={recurso.ID_Recurso_Electronico}
                   title={recurso.Nombre}
                   description={recurso.Descripcion}
-                  image={recurso.Imagen_URL}
+                  image={`http://localhost:4000${recurso.Imagen_URL}`}
                   siteLink={recurso.Enlace_Pagina}
                   index={index}
                   expandedCardIndex={expandedCardIndex}

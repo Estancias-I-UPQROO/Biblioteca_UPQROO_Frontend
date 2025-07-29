@@ -59,11 +59,6 @@
   font-size: 1rem;
 }
 
-.admin-sidebar button.active {
-  background: var(--primary-color);
-  font-weight: 600;
-}
-
 .admin-sidebar button:hover {
   background: var(--bg-dark-gray);
 }
@@ -94,19 +89,6 @@
   font-size: 0.95rem;
 }
 
-.categories-sidebar button.active {
-  background: var(--primary-color);
-  color: var(--text-color-light);
-  font-weight: 600;
-}
-
-.categories-sidebar button:hover {
-  background: #d0d0d0;
-}
-
-.categories-sidebar button.active:hover {
-  background: #e05d0a; /* Tono más oscuro de primary-color */
-}
 
 .recursos-content {
   flex: 1;
@@ -280,10 +262,16 @@
   background: #e05d0a; /* Tono más oscuro de primary-color */
 }
 
+/* Versión mejorada de .form-actions */
 .form-actions {
   display: flex;
-  gap: 10px;
+  gap: 1rem; /* Espaciado más generoso */
+  flex-wrap: wrap; /* Permite que los botones pasen a siguiente línea si no caben */
+  margin: 1.5rem 0; /* Mayor margen vertical */
+  padding: 0.5rem 0;
+  align-items: center; /* Alineación vertical consistente */
 }
+
 
 /* Admindash.css */
 /* Estilo para los inputs con error */
@@ -323,6 +311,17 @@
 
 .form-actions button.cancel {
   background: var(--neutral-color);
+  color: var(--neutral-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: inline-block;
+  margin: 20px 0;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: transparent;
+  border: 2px solid var(--neutral-color);
 }
 .form-actions button.cancel:hover {
   background: var(--neutral-color-hover);
@@ -712,70 +711,202 @@
   }
 }
 
-.category-item-flex {
+.checkbox-label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.checkbox-label:hover {
+  background-color: #f0f0f0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  /* Oculta el checkbox nativo */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--primary-color);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.category-item-flex {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.75rem;
   border: 1px solid #ccc;
   border-radius: 6px;
   background-color: #f8f8f8;
-  flex-direction: row;
+  margin-bottom: 0.75rem;
 }
 
+/* Nombre de categoría (parte superior) */
 .category-name-button {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.4rem 0.75rem;
-  font-size: 1rem;
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.category-name-button.active {
-  background-color: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
-.category-action-button {
-  padding: 0.4rem 0.75rem;
+   flex: 1;
+  padding: 0.5rem;
   font-size: 0.9rem;
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-name-button:hover {
+  border-color: #bbb;
+}
+
+.category-name-button.active {
+  background: var(--primary-color);
+  color: var(--primary-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: inline-block;
+  margin: 20px 0;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: transparent;
+  border: 2px solid var(--primary-color);
+}
+
+/* Contenedor de acciones (parte inferior) */
+.category-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+/* Botones de acción */
+.category-action-button {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-action-button.edit {
+  display: inline-block;
+  padding: 12px 24px;
+  margin: 20px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #007bff; /* Color de acento azul */
+  background-color: transparent;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-action-button.edit:hover {
+  background-color: #2563eb;
 }
 
 .category-action-button.delete {
-  background-color: #ef4444;
-  color: white;
+  background: var(--danger-color);
+  color: var(--danger-color);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: inline-block;
+  margin: 20px 0;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: transparent;
+  border: 2px solid var(--danger-color);
+}
+
+.category-action-button.delete:hover {
+  background-color: #dc2626;
 }
 
 .category-action-button.restore {
-  background-color: #10b981;
-  color: white;
+  background: #0d9c6e;
+  color: #0d9c6e;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: inline-block;
+  margin: 20px 0;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: transparent;
+  border: 2px solid #0d9c6e;
 }
 
-@media (max-width: 600px) {
-  .category-item-flex {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.category-action-button.restore:hover {
+  background-color: #0d9c6e;
+}
 
-  .category-name-button,
+.add-category-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: var(--primary-color, #3b82f6);
+  color: white;
+  border: 2px solid var(--primary-color, #3b82f6);
+  margin-top: 1rem;
+}
+
+.add-category-btn:hover {
+  background-color: var(--primary-color-hover, #2563eb);
+  border-color: var(--primary-color-hover, #2563eb);
+}
+
+/* Estilos responsive */
+@media (max-width: 768px) {
+  .category-actions {
+    flex-direction: column;
+  }
+  
   .category-action-button {
     width: 100%;
+    padding: 0.75rem;
+  }
+  
+  .category-name-button {
+    padding: 1rem;
+    font-size: 1.1rem;
   }
 }
 
+/* Manteniendo tus otros estilos existentes */
 .resource-controls-flex {
   display: flex;
   justify-content: space-between;
@@ -783,13 +914,6 @@
   margin-top: 0.5rem;
   gap: 0.5rem;
   padding: 0.3rem 0;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.95rem;
 }
 
 .edit-btn {
@@ -816,91 +940,81 @@
     width: 100%;
   }
 }
-
-
-button.restore {
-  background-color: #4caf50;
-  color: white;
+.categories-filter {
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
 }
 
-button.restore:hover{
-  background-color: #027a06;
-}
-
-button.delete {
-  background-color: #f44336;
-  color: white;
-}
-
-.category-item-flex {
+.custom-checkbox {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 8px;
-  flex-wrap: wrap; /* ✅ permite que se acomode mejor en móvil */
-}
-
-.category-name-button {
-  flex-grow: 1;
-  text-align: left;
-  padding: 8px 12px;
-  font-size: 1rem;
-  border: none;
-  background-color: #f0f0f0;
-  border-radius: 6px;
-}
-
-.category-name-button.active {
-  background-color: #007bff;
-  color: white;
-}
-
-.category-action-button {
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  border: none;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.category-action-button.delete {
-  background-color: #f44336;
-  color: white;
-}
-
-.category-action-button.restore {
-  background-color: #4caf50;
-  color: white;
-}
-
-@media (max-width: 768px) {
-  .category-item-flex {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .category-name-button,
-  .category-action-button {
-    width: 100%;
-    font-size: 1rem;
-    text-align: center;
-  }
-
-  .category-action-button {
-    margin-top: 6px;
-  }
-}
-
-.logout-button {
-  margin-top: 2rem;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 5px;
+  position: relative;
+  padding-left: 28px;
   cursor: pointer;
+  font-size: 0.95rem;
+  color: #555;
+  user-select: none;
+  transition: all 0.2s ease;
 }
-.logout-button:hover {
-  background-color: #c0392b;
+
+.custom-checkbox:hover {
+  color: #333;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:hover .checkmark {
+  border-color: #2563eb;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: #3b82f6;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.custom-checkbox .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-label {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.custom-checkbox input:checked ~ .checkbox-label {
+  color: #3b82f6;
+  font-weight: 600;
 }

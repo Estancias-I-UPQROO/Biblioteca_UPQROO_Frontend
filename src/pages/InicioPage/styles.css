@@ -115,7 +115,7 @@ body {
 }
 
 
-@media (max-width: 480px) {
+@media (max-width: 667px) {
   .franja-contenedor {
     height: 250px;
   }
@@ -430,7 +430,7 @@ body {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 667px) {
   .modal-contenido {
     flex-direction: column;
   }
@@ -439,6 +439,10 @@ body {
     height: 150px;
   }
 } 
+
+
+
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -526,6 +530,53 @@ body {
 
   
 }
+@media (min-width: 480px) and (max-width: 740px) {
+  .hero-biblioteca {
+    height: 15cm;
+  }
+
+  .slide-biblio img {
+    object-fit: cover;
+  }
+
+  .contenido-hero {
+    width: 85%;
+  }
+
+  .contenido-hero h1 {
+    font-size: 2rem;
+  }
+
+  .contenido-hero h2 {
+    font-size: 1rem;
+  }
+
+  
+}
+@media (min-width: 1180px) and (max-width: 1600px) {
+  .hero-biblioteca {
+    height: 15cm;
+  }
+
+  .slide-biblio img {
+    object-fit: cover;
+  }
+
+  .contenido-hero {
+    width: 85%;
+  }
+
+  .contenido-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .contenido-hero h2 {
+    font-size: 1.2rem;
+  }
+
+  
+}
+
 
 /* --- REGLAS RESPONSIVE UNIFICADAS --- */
 /* He unido tus dos media queries para (max-width: 768px) para que sea más limpio */
