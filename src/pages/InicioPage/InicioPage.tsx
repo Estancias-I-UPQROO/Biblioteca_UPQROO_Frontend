@@ -150,7 +150,7 @@ export const InicioPage = () => {
               className="slider-card"
               onClick={() => abrirModal(evento)}
             >
-              <img src={evento.Imagen_URL} alt={evento.Titulo} />
+              <img src={`http://localhost:4000${evento.Imagen_URL}`} alt={evento.Titulo} />
               <div className="slider-hover-box">
                 <h3>{evento.Titulo}</h3>
                 <p>Haz clic para más información</p>
@@ -166,11 +166,12 @@ export const InicioPage = () => {
           <div className="modal-contenido" onClick={e => e.stopPropagation()}>
             <button className="modal-cerrar" onClick={cerrarModal}>&times;</button>
             <div className="modal-imagen-container">
-              <img
-                src={imagenActual || eventoSeleccionado.Imagen_URL}
-                alt={eventoSeleccionado.Titulo}
-                className="modal-imagen-fullscreen"
-              />
+           <img
+              src={imagenActual?.startsWith('http') ? imagenActual : `http://localhost:4000${imagenActual || eventoSeleccionado.Imagen_URL}`}
+              alt={eventoSeleccionado.Titulo}
+              className="modal-imagen-fullscreen"
+            />
+
             </div>
             <div className="modal-texto">
               <h3>{eventoSeleccionado.Titulo}</h3>
@@ -183,7 +184,7 @@ export const InicioPage = () => {
                       className={`imagen-boton ${imagenActual === subevento.Imagen_URL ? 'activo' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        cambiarImagen(subevento.Imagen_URL);
+                        cambiarImagen(`http://localhost:4000${subevento.Imagen_URL}`)
                       }}
                     >
                       {subevento.Titulo}
@@ -198,7 +199,3 @@ export const InicioPage = () => {
     </div>
   );
 };
-<<<<<<<<< Temporary merge branch 1
-=========
-
->>>>>>>>> Temporary merge branch 2

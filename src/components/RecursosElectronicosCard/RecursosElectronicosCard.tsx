@@ -82,9 +82,9 @@ export const RecursosElectronicosCard = ({
           <h2 className="recursos-card-title">{title}</h2>
         </div>
         {!isTouchDevice && isExpanded && (
-          <div className="recursos-card-description-overlay">
+          <Link className="recursos-card-description-overlay" to={siteLink}>
             <p className="recursos-card-description">{description}</p>
-          </div>
+          </Link>
         )}
       </div>
     </div>

@@ -82,4 +82,4 @@ export const deleteRecurso = async (idRecurso: string) => {
 export const restoreRecurso = async (idRecurso: string) => {
   const { data } = await axios.patch(`${API_URL}/restore-recurso/${idRecurso}`);
   return data;
-}; 
+};
