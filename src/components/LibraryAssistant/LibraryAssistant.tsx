@@ -1,34 +1,114 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type JSX } from 'react';
 import {
   FaComment, FaTimes, FaBook, FaSearch, FaQuestionCircle,
-  FaInfoCircle, FaPaperPlane
+  FaInfoCircle
 } from 'react-icons/fa';
 import './LibraryAssistant.css';
 
+
+type Category = {
+  ID_Categoria_Recursos_Electronicos: string;
+  Nombre: string;
+  Activo: boolean; 
+};
+
 export const LibraryAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{ text: string; isUser: boolean }>>([]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [messages, setMessages] = useState<Array<{ text: string | JSX.Element; isUser: boolean }>>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const chatRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const quickOptions = [
     { text: 'Consulta de horarios', icon: <FaInfoCircle /> },
-    { text: 'Búsqueda de libros', icon: <FaSearch /> },
+    { text: 'Búsqueda de libros por categoria', icon: <FaSearch /> },
     { text: 'Préstamos', icon: <FaBook /> },
     { text: 'Renovación de préstamo en línea', icon: <FaBook /> },
-    { text: 'Consulta de recursos electrónicos', icon: <FaBook /> },
+    { text: 'Consulta de recursos electrónicos de paga', icon: <FaBook /> },
     { text: 'Contacto directo', icon: <FaQuestionCircle /> },
   ];
 
-  const botResponses: Record<string, string> = {
-    'consulta de horarios': 'Los horarios de atención de la biblioteca son:\nLunes a Viernes:\n09:00–14:00 y 17:00–20:00\nSábado y Domingo: Cerrado.',
-    'búsqueda de libros': 'Para buscar libros puedes usar el catálogo en línea: https://siabuc.ucol.mx/upqroo\nTambién puedes explorar los recursos electrónicos disponibles.',
-    'préstamos': 'Para realizar un préstamo:\n1. Acude a la Biblioteca.\n2. Selecciona el libro.\n3. Dirígete con la bibliotecóloga y llena la papeleta.\n*El ejemplar 1 no está disponible para préstamo.*',
-    'renovación de préstamo en línea': 'Para renovar tu préstamo:\nIngresa a la sección "Renovación" en nuestro sistema y completa los datos solicitados.',
-    'consulta de recursos electrónicos': 'Nuestra biblioteca ofrece acceso a:\n• Digitalia\n• Pearson\n• Recursos gratuitos como revistas electrónicas, diccionarios y más.',
-    'contacto directo': 'Puedes escribirnos directamente a:\n✉️ Lesliee Lizbeth Martínez Rodríguez\n📩 biblioteca@upqroo.edu.mx\n📞 998 283 1859',
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/categorias-recursos-electronicos/get-categorias');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: Category[] = await response.json();
+      const activeCategories = data.filter(cat => cat.Activo);
+      setCategories(activeCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+
+
+
+  const botResponses: Record<string, JSX.Element> = {
+    'consulta de horarios': (
+      <>
+        Los horarios de atención de la biblioteca son:<br />
+        Lunes a Viernes: 09:00–14:00 y 17:00–20:00<br />
+        Sábado y Domingo: Cerrado.
+      </>
+    ),
+
+    'búsqueda de libros': (
+      <>
+        Contamos con las siguientes categorías de recursos electrónicos:<br />
+        {categories.length > 0 ? (
+          <ul>
+            {categories.map((category) => (
+              <li key={category.ID_Categoria_Recursos_Electronicos}>
+                • <a
+                  href={`/recursos-electronicos/${category.ID_Categoria_Recursos_Electronicos}`}
+                  className="bot-link"
+                >
+                  {category.Nombre}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span>Cargando categorías o no hay categorías disponibles.</span>
+        )}
+      </>
+    ),
+
+    'préstamos': (
+      <>
+        Para realizar un préstamo:<br />
+        1. Acude a la Biblioteca.<br />
+        2. Selecciona el libro.<br />
+        3. Dirígete con la bibliotecóloga y llena la papeleta.<br />
+        <strong>*El ejemplar 1 no está disponible para préstamo.*</strong>
+      </>
+    ),
+
+    'renovación de préstamo en línea': (
+      <>
+        Para renovar tu préstamo, visita la sección{' '}
+        <a href="/renovacion" className="bot-link">Renovación</a>.
+      </>
+    ),
+
+    'consulta de recursos electrónicos': (
+      <>
+        Contamos con una seccion de recursos de paga.<br />
+        Puedes consultarlos en la seccion de "AYUDA"{' '}
+        <a href="/ayuda" className="bot-link">Digitalia y Pearson</a>.
+      </>
+    ),
+
+    'contacto directo': (
+      <>
+        Puedes escribirnos directamente a:<br />
+        ✉️ Lesliee Lizbeth Martínez Rodríguez<br />
+        📩 biblioteca@upqroo.edu.mx<br />
+      </>
+    ),
   };
 
   useEffect(() => {
@@ -48,6 +128,9 @@ export const LibraryAssistant = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
+useEffect(() => {
+  fetchCategories(); 
+}, []);
 
   useEffect(() => {
     if (!isOpen || messages.length > 0) return;
@@ -67,30 +150,43 @@ export const LibraryAssistant = () => {
             '• Renovación de préstamo en línea\n' +
             '• Consulta de recursos electrónicos\n' +
             '• Contacto directo\n\n' +
-            'Selecciona una opción o escribe tu duda.',
+            'Selecciona una opción.',
           isUser: false,
         },
       ]);
     }, 600);
   }, [isOpen, messages.length]);
 
-  const handleSendMessage = (text?: string) => {
-    const messageToSend = text || inputMessage;
-    if (!messageToSend.trim()) return;
-
+  const handleSendMessage = async (messageToSend: string) => {
     setMessages(prev => [...prev, { text: messageToSend, isUser: true }]);
-    setInputMessage('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const lowerMessage = messageToSend.toLowerCase();
-      let response =
-        'Puedo ayudarte con:\n• Consulta de horarios\n• Búsqueda de libros\n• Préstamos\n• Renovación de préstamo en línea\n• Consulta de recursos electrónicos\n• Contacto directo\n\nEscribe tu pregunta o elige una opción.';
+      let response: string | JSX.Element = (
+        <>
+          Puedo ayudarte con:<br />
+          • Consulta de horarios<br />
+          • Búsqueda de libros<br />
+          • Préstamos<br />
+          • Renovación de préstamo en línea<br />
+          • Consulta de recursos electrónicos<br />
+          • Contacto directo<br />
+          <br />
+          Selecciona una opción.
+        </>
+      );
 
-      for (const key in botResponses) {
-        if (lowerMessage.includes(key)) {
-          response = botResponses[key];
-          break;
+      
+      if (lowerMessage.includes('consulta de recursos electrónicos')) {
+        await fetchCategories(); 
+        response = botResponses['consulta de recursos electrónicos']; 
+      } else {
+        for (const key in botResponses) {
+          if (lowerMessage.includes(key)) {
+            response = botResponses[key];
+            break;
+          }
         }
       }
 
@@ -124,12 +220,16 @@ export const LibraryAssistant = () => {
               <div className="chat-messages">
                 {messages.map((msg, index) => (
                   <div key={index} className={`message ${msg.isUser ? 'user' : 'bot'}`}>
-                    {msg.text.split('\n').map((line, i) => (
-                      <span key={i}>
-                        {line}
-                        <br />
-                      </span>
-                    ))}
+                    {typeof msg.text === 'string' ? (
+                      msg.text.split('\n').map((line, i) => (
+                        <span key={i}>
+                          {line}
+                          <br />
+                        </span>
+                      ))
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                 ))}
                 {isTyping && (
@@ -140,23 +240,6 @@ export const LibraryAssistant = () => {
                   </div>
                 )}
                 <div ref={messagesEndRef} />
-              </div>
-
-              <div className="chat-input">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={e => setInputMessage(e.target.value)}
-                  placeholder="Escribe tu pregunta..."
-                  onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                />
-                <button
-                  className="send-btn"
-                  onClick={() => handleSendMessage()}
-                  disabled={!inputMessage.trim()}
-                >
-                  <FaPaperPlane size={16} />
-                </button>
               </div>
             </div>
 

@@ -29,6 +29,19 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* Estilo para los enlaces dentro del bot */
+.bot-link {
+  color: #f26522; /* Azul clásico */
+  text-decoration: underline;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bot-link:hover {
+  color: #f26522; /* Azul más oscuro al pasar el mouse */
+  text-decoration: none;
+}
+
 /* MOBILE RESPONSIVE */
 @media (max-width: 767px) {
   .assistant-chat {
