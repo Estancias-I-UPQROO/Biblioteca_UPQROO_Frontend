@@ -21,16 +21,6 @@ export const Footer = () => {
 
                             <ul className="mt-5 space-y-5 flex flex-col">
                                 <li>
-                                <Link to='/base-de-datos' onClick={handleSmoothScroll}>
-                                    Base de Datos
-                                </Link>
-                                </li>
-                                <li>
-                                <Link to='/bibliotecas-digitales' onClick={handleSmoothScroll}>
-                                    Bibliotecas Virtuales
-                                </Link>
-                                </li>
-                                <li>
                                 <Link to='/renovacion' onClick={handleSmoothScroll}>
                                     Renovación
                                 </Link>

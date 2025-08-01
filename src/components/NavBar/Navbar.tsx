@@ -3,6 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+type Categoria = {
+  ID_Categoria_Recursos_Electronicos: string;
+  Nombre: string;
+};
+
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState<boolean>(false);
 
@@ -43,28 +48,42 @@ export const Navbar = () => {
   const [categoriaLinks, setCategoriaLinks] = useState<{ to: string; label: string }[]>([]);
 
   // Fetch categorías desde la base de datos
+  const categoriasAgregadas = useRef(false);
+
   useEffect(() => {
     fetch("http://localhost:4000/api/categorias-recursos-electronicos/get-categorias")
       .then((res) => res.json())
-      .then((data) => {
-        const links = data.map((cat: { ID_Categoria_Recursos_Electronicos: string; Nombre: string }) => ({
+      .then((data: Categoria[]) => {
+        const links = data.map((cat) => ({
           to: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
           label: cat.Nombre,
         }));
         setCategoriaLinks(links);
+
+        if (!categoriasAgregadas.current) {
+          const categorySuggestions = data.map((cat) => ({
+            title: cat.Nombre,
+            link: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
+            type: 'categoría',
+          }));
+          setSearchSuggestions(prev => [...prev, ...categorySuggestions]);
+          categoriasAgregadas.current = true;
+        }
       })
       .catch((err) => {
         console.error("Error al cargar categorías:", err);
       });
   }, []);
 
-  const searchSuggestions = [
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    { title: string; link: string; type: string }[]
+  >([
     { title: 'Renovación en línea', link: '/renovacion', type: 'servicio' },
     { title: 'Sugerencias de material de compra', link: '/solicitud-compra', type: 'servicio' },
     { title: 'Guía de uso de Digitalia Hispánica', link: '/guia_de_uso_digitalia_hispanica.pdf', type: 'ayuda' },
     { title: 'Guía de Acceso a Pearson Higher Education', link: '/Guia_acceso_PHE.pdf', type: 'ayuda' },
-    { title: 'Lineamientos de la biblioteca', link: '/Lineamientos_para_el_funcionamiento_de_la_biblioteca_de_la_Universidad_Politecnica_de_Quintana_roo.pdf', type: 'lineamiento' }
-  ];
+    { title: 'Lineamientos de la biblioteca', link: '/Lineamientos_para_el_funcionamiento_de_la_biblioteca_de_la_Universidad_Politecnica_de_Quintana_roo.pdf', type: 'lineamiento' },
+  ]);
 
   const filteredSuggestions = searchQuery.trim()
     ? searchSuggestions.filter(s =>

@@ -1,31 +1,38 @@
 import React, { useState } from 'react';
-import { RefreshCwIcon, MailIcon } from 'lucide-react';
+import { RefreshCwIcon, MailIcon, PlusIcon, MinusIcon } from 'lucide-react';
 
 export const Renovacion: React.FC = () => {
   const [formData, setFormData] = useState({
     matricula: '',
-    nombre_estudiante: '',
-    nombre_libro: '',
-    clasificacion: '',
+    nombre_libro: [''], // Se convierte en arreglo
   });
 
   const [respuesta, setRespuesta] = useState('');
   const [cargando, setCargando] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (index: number, value: string) => {
+    const updatedLibros = [...formData.nombre_libro];
+    updatedLibros[index] = value;
+    setFormData({ ...formData, nombre_libro: updatedLibros });
+  };
+
+  const addLibro = () => {
+    if (formData.nombre_libro.length < 3) {
+      setFormData({ ...formData, nombre_libro: [...formData.nombre_libro, ''] });
+    }
+  };
+
+  const removeLibro = (index: number) => {
+    const updatedLibros = formData.nombre_libro.filter((_, i) => i !== index);
+    setFormData({ ...formData, nombre_libro: updatedLibros });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRespuesta(''); // Limpiar la respuesta anterior
-    setCargando(true); // Activar estado de carga
+    setRespuesta('');
+    setCargando(true);
 
-    // Validar campos vacíos
-    if (!formData.matricula || !formData.nombre_estudiante || !formData.nombre_libro || !formData.clasificacion) {
+    if (!formData.matricula || formData.nombre_libro.some(libro => !libro.trim())) {
       setRespuesta('Por favor, completa todos los campos.');
       setCargando(false);
       return;
@@ -38,18 +45,17 @@ export const Renovacion: React.FC = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.text(); // El backend responde con texto, no JSON
-
+      const data = await res.text();
       if (res.ok) {
         setRespuesta('Solicitud de renovación enviada con éxito. Recibirás una confirmación por correo.');
-        setFormData({ matricula: '', nombre_estudiante: '', nombre_libro: '', clasificacion: '' });
+        setFormData({ matricula: '', nombre_libro: [''] });
       } else {
         setRespuesta(`Error: ${data || 'No se pudo enviar la solicitud.'}`);
       }
     } catch (error) {
       setRespuesta('Error en la conexión con el servidor. Intenta de nuevo más tarde.');
     } finally {
-      setCargando(false); // Desactivar estado de carga
+      setCargando(false);
     }
   };
 
@@ -73,47 +79,46 @@ export const Renovacion: React.FC = () => {
               id="matricula"
               name="matricula"
               value={formData.matricula}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
               required
               className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
-          <div>
-            <label htmlFor="nombre_estudiante" className="block text-sm font-medium text-gray-700 mb-1">Nombre del estudiante:</label>
-            <input
-              type="text"
-              id="nombre_estudiante"
-              name="nombre_estudiante"
-              value={formData.nombre_estudiante}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label htmlFor="nombre_libro" className="block text-sm font-medium text-gray-700 mb-1">Nombre del libro:</label>
-            <input
-              type="text"
-              id="nombre_libro"
-              name="nombre_libro"
-              value={formData.nombre_libro}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label htmlFor="clasificacion" className="block text-sm font-medium text-gray-700 mb-1">Clasificación:</label>
-            <input
-              type="text"
-              id="clasificacion"
-              name="clasificacion"
-              value={formData.clasificacion}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            />
-          </div>
+
+          {formData.nombre_libro.map((libro, index) => (
+            <div key={index} className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre del libro {formData.nombre_libro.length > 1 && `(${index + 1})`}:
+              </label>
+              <input
+                type="text"
+                value={libro}
+                onChange={(e) => handleChange(index, e.target.value)}
+                required
+                className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+              {formData.nombre_libro.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeLibro(index)}
+                  className="absolute right-2 top-9 text-red-500 hover:text-red-700"
+                >
+                  <MinusIcon size={18} />
+                </button>
+              )}
+            </div>
+          ))}
+
+          {formData.nombre_libro.length < 3 && (
+            <button
+              type="button"
+              onClick={addLibro}
+              className="text-sm text-orange-600 hover:underline flex items-center gap-1"
+            >
+              <PlusIcon size={16} /> Agregar otro libro
+            </button>
+          )}
+
           <button
             type="submit"
             disabled={cargando}
@@ -123,6 +128,7 @@ export const Renovacion: React.FC = () => {
             <MailIcon className="w-4 h-4" />
           </button>
         </form>
+
         {respuesta && (
           <div className="mt-6 p-4 bg-orange-50 border border-orange-300 rounded-xl text-orange-800 text-sm">
             {respuesta}
