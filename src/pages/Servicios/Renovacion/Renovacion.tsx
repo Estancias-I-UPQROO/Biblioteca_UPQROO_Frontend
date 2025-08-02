@@ -1,19 +1,29 @@
 import React, { useState } from 'react';
-import { RefreshCwIcon, MailIcon, PlusIcon, MinusIcon } from 'lucide-react';
+import { RefreshCwIcon, MailIcon, PlusIcon, MinusIcon, XIcon } from 'lucide-react';
+import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL_Correos;
 
 export const Renovacion: React.FC = () => {
   const [formData, setFormData] = useState({
     matricula: '',
-    nombre_libro: [''], // Se convierte en arreglo
+    nombre_libro: [''],
   });
 
   const [respuesta, setRespuesta] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   const handleChange = (index: number, value: string) => {
     const updatedLibros = [...formData.nombre_libro];
     updatedLibros[index] = value;
     setFormData({ ...formData, nombre_libro: updatedLibros });
+  };
+
+  const handleMatriculaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value) && value.length <= 9) {
+      setFormData({ ...formData, matricula: value });
+    }
   };
 
   const addLibro = () => {
@@ -34,29 +44,32 @@ export const Renovacion: React.FC = () => {
 
     if (!formData.matricula || formData.nombre_libro.some(libro => !libro.trim())) {
       setRespuesta('Por favor, completa todos los campos.');
+      setMostrarModal(true);
       setCargando(false);
       return;
     }
 
     try {
-      const res = await fetch('http://localhost:4000/api/correos/enviar-correo-renovacion', {
-        method: 'POST',
+      const { data } = await axios.post(`${BASE_URL}/enviar-correo-renovacion`, formData, {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
       });
-
-      const data = await res.text();
-      if (res.ok) {
-        setRespuesta('Solicitud de renovación enviada con éxito. Recibirás una confirmación por correo.');
-        setFormData({ matricula: '', nombre_libro: [''] });
+      setRespuesta(data.mensaje || 'Correo enviado con éxito');
+      setRespuesta('Solicitud de renovación enviada con éxito. Recibirás una confirmación por correo. Tienes 3 días hábiles para devolver el libro a la bibliotecaria.');
+      setFormData({ matricula: '', nombre_libro: [''] });
+    } catch (error: any) {
+      if (error.response?.data) {
+        setRespuesta(`Error: ${error.response.data}`);
       } else {
-        setRespuesta(`Error: ${data || 'No se pudo enviar la solicitud.'}`);
+        setRespuesta('Error en la conexión con el servidor. Intenta de nuevo más tarde.');
       }
-    } catch (error) {
-      setRespuesta('Error en la conexión con el servidor. Intenta de nuevo más tarde.');
     } finally {
+      setMostrarModal(true);
       setCargando(false);
     }
+  };
+
+  const cerrarModal = () => {
+    setMostrarModal(false);
   };
 
   return (
@@ -69,7 +82,7 @@ export const Renovacion: React.FC = () => {
           </h1>
         </div>
         <p className="text-lg text-gray-700 leading-relaxed mb-6">
-          Puedes renovar tu préstamo desde casa solo el día exacto del vencimiento. Recibirás confirmación por correo.
+          Puedes renovar tu préstamo desde casa siempre que la renovación del préstamo se encuentre exactamente los días de vencimiento. Recibirás confirmación por correo.
         </p>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -79,9 +92,13 @@ export const Renovacion: React.FC = () => {
               id="matricula"
               name="matricula"
               value={formData.matricula}
-              onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
+              onChange={handleMatriculaChange}
               required
+              maxLength={9}
+              pattern="\d*"
+              inputMode="numeric"
               className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              placeholder="Solo números (máx. 9)"
             />
           </div>
 
@@ -129,9 +146,29 @@ export const Renovacion: React.FC = () => {
           </button>
         </form>
 
-        {respuesta && (
-          <div className="mt-6 p-4 bg-orange-50 border border-orange-300 rounded-xl text-orange-800 text-sm">
-            {respuesta}
+        {/* Modal de respuesta */}
+        {mostrarModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full relative">
+              <button
+                onClick={cerrarModal}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <XIcon size={24} />
+              </button>
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold text-orange-600 mb-2">
+                  {respuesta.includes('éxito') ? '¡Éxito!' : 'Atención'}
+                </h3>
+                <p className="text-gray-700">{respuesta}</p>
+                <button
+                  onClick={cerrarModal}
+                  className="mt-4 bg-orange-500 text-white hover:bg-orange-600 px-4 py-2 rounded-lg font-medium"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+const BASE_URL_C = import.meta.env.VITE_API_URL_Categorias_Recursos_Electronicos;
 
 type Categoria = {
   ID_Categoria_Recursos_Electronicos: string;
@@ -51,29 +53,38 @@ export const Navbar = () => {
   const categoriasAgregadas = useRef(false);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/categorias-recursos-electronicos/get-categorias")
-      .then((res) => res.json())
-      .then((data: Categoria[]) => {
-        const links = data.map((cat) => ({
-          to: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
-          label: cat.Nombre,
-        }));
-        setCategoriaLinks(links);
+  const fetchData = async () => {
+    try {
+      // Obtener categorías
+      const { data: categorias } = await axios.get<Categoria[]>(`${BASE_URL_C}/get-categorias`);
+      
+      // Mapear categorías a links
+      const links = categorias.map((cat) => ({
+        to: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
+        label: cat.Nombre,
+      }));
+      setCategoriaLinks(links);
 
-        if (!categoriasAgregadas.current) {
-          const categorySuggestions = data.map((cat) => ({
-            title: cat.Nombre,
-            link: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
-            type: 'categoría',
-          }));
-          setSearchSuggestions(prev => [...prev, ...categorySuggestions]);
-          categoriasAgregadas.current = true;
-        }
-      })
-      .catch((err) => {
-        console.error("Error al cargar categorías:", err);
-      });
-  }, []);
+      // Agregar sugerencias de búsqueda si no se han agregado
+      if (!categoriasAgregadas.current) {
+        const categorySuggestions = categorias.map((cat) => ({
+          title: cat.Nombre,
+          link: `/recursos-electronicos/${cat.ID_Categoria_Recursos_Electronicos}`,
+          type: 'categoría',
+        }));
+        setSearchSuggestions(prev => [...prev, ...categorySuggestions]);
+        categoriasAgregadas.current = true;
+      }
+    } catch (err) {
+      console.error("Error al cargar datos:", err);
+      if (axios.isAxiosError(err)) {
+        console.error("Detalles del error:", err.response?.data);
+      }
+    }
+  };
+
+  fetchData();
+}, []);
 
   const [searchSuggestions, setSearchSuggestions] = useState<
     { title: string; link: string; type: string }[]

@@ -4,7 +4,8 @@ import {
   FaInfoCircle
 } from 'react-icons/fa';
 import './LibraryAssistant.css';
-
+import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL_Categorias_Recursos_Electronicos;
 
 type Category = {
   ID_Categoria_Recursos_Electronicos: string;
@@ -31,15 +32,15 @@ export const LibraryAssistant = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/categorias-recursos-electronicos/get-categorias');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Category[] = await response.json();
+      const { data } = await axios.get<Category[]>(`${BASE_URL}/get-categorias`);
       const activeCategories = data.filter(cat => cat.Activo);
       setCategories(activeCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
+      // Opcional: puedes manejar el error de forma más específica
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error details:", error.response?.data);
+      }
     }
   };
 

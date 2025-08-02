@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {  useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+const BASE_URL_A = import.meta.env.VITE_API_URL_Admin;
 
 export const Login: React.FC = () => {
   const unameRef = useRef<HTMLInputElement>(null);
@@ -48,51 +50,53 @@ export const Login: React.FC = () => {
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const username = unameRef.current?.value;
-    const password = passRef.current?.value;
+  e.preventDefault();
+  const username = unameRef.current?.value;
+  const password = passRef.current?.value;
 
-    if (!username || !password) {
-      setMessage('Por favor, complete los campos antes de continuar');
-      setMessageColor('rgb(218 49 49)');
-      return;
-    }
+  if (!username || !password) {
+    setMessage('Por favor, complete los campos antes de continuar');
+    setMessageColor('rgb(218 49 49)');
+    return;
+  }
 
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const response = await fetch('http://localhost:4000/api/admin/login', {
-        method: 'POST',
+  try {
+    const { data } = await axios.post(
+      `${BASE_URL_A}/login`,
+      {
+        Usuario: username,
+        Password: password
+      },
+      {
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          Usuario: username,
-          Password: password
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.token) {
-        localStorage.setItem('token', data.token);
-        navigate('/admin/dash');
-      } else {
-        setMessage(data.message || 'Credenciales inválidas');
-        setMessageColor('rgb(218 49 49)');
+        }
       }
-    } catch (error) {
-      console.error('Error en login:', error);
-      setMessage('Error al conectar con el servidor.');
-      setMessageColor('rgb(218 49 49)');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    );
 
-  useEffect(() => {
-    showMsg();
-  }, []);
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      navigate('/admin/dash');
+    } else {
+      setMessage(data.message || 'Credenciales inválidas');
+      setMessageColor('rgb(218 49 49)');
+    }
+  } catch (error) {
+    console.error('Error en login:', error);
+    let errorMessage = 'Error al conectar con el servidor.';
+    
+    if (axios.isAxiosError(error)) {
+      errorMessage = error.response?.data?.message || errorMessage;
+    }
+
+    setMessage(errorMessage);
+    setMessageColor('rgb(218 49 49)');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const backgroundStyle = {
     backgroundImage: 'url("https://wallpapercrafter.com/desktop1/562030-library-cartoon-books-candles-ladder-ladders.jpg")',
