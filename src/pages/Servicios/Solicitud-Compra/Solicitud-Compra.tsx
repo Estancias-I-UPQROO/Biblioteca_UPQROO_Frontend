@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { MessageSquareIcon } from 'lucide-react';
+import { MessageSquareIcon, XIcon } from 'lucide-react';
+import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL_Correos;
 
 export const SugerenciasMaterial: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -12,52 +14,66 @@ export const SugerenciasMaterial: React.FC = () => {
 
   const [respuesta, setRespuesta] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+  };
+
+  const handleMatriculaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Solo permite números y máximo 9 dígitos
+    if (/^\d*$/.test(value) && value.length <= 9) {
+      setFormData({
+        ...formData,
+        matricula: value,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRespuesta(''); // Limpiar la respuesta anterior
-    setCargando(true); // Activar estado de carga
+    setRespuesta('');
+    setCargando(true);
 
-    // Validar campos obligatorios
     if (!formData.matricula || !formData.titulo || !formData.autor_editorial) {
       setRespuesta('Por favor, completa los campos obligatorios: Matrícula, Título y Autor/Editorial.');
+      setMostrarModal(true);
       setCargando(false);
       return;
     }
 
     try {
-      const res = await fetch('http://localhost:4000/api/correos/enviar-correo-sugerencia-material', {
-        method: 'POST',
+      const { data } = await axios.post(`${BASE_URL}/enviar-correo-sugerencia-material`, formData, {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
       });
-
-      const data = await res.text();
-
-      if (res.ok) {
-        setRespuesta('¡Gracias por tu sugerencia! Será revisada por el equipo de la Biblioteca.');
-        setFormData({
-          matricula: '',
-          titulo: '',
-          autor_editorial: '',
-          tema: '',
-          anio_publicacion: '',
-        });
+      setRespuesta(data.mensaje || 'Correo enviado con éxito');
+      setRespuesta('¡Gracias por tu sugerencia! Si tu solicitud es aceptada, recibirás un correo de confirmación. Será revisada por el equipo de la Biblioteca.');
+      setFormData({
+        matricula: '',
+        titulo: '',
+        autor_editorial: '',
+        tema: '',
+        anio_publicacion: '',
+      });
+    } catch (error: any) {
+      if (error.response?.data) {
+        setRespuesta(`Error: ${error.response.data}`);
       } else {
-        setRespuesta(`Error: ${data || 'No se pudo enviar la sugerencia.'}`);
+        setRespuesta('Error en la conexión con el servidor. Intenta de nuevo más tarde.');
       }
-    } catch (error) {
-      setRespuesta('Error en la conexión con el servidor. Intenta de nuevo más tarde.');
     } finally {
+      setMostrarModal(true);
       setCargando(false);
     }
+  };
+
+  const cerrarModal = () => {
+    setMostrarModal(false);
   };
 
   return (
@@ -82,9 +98,12 @@ export const SugerenciasMaterial: React.FC = () => {
               id="matricula"
               name="matricula"
               value={formData.matricula}
-              onChange={handleChange}
+              onChange={handleMatriculaChange}
               required
-              placeholder="Ej. 2023123456"
+              maxLength={9}
+              pattern="\d*"
+              inputMode="numeric"
+              placeholder="Solo números (máx. 9)"
               className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
@@ -152,9 +171,30 @@ export const SugerenciasMaterial: React.FC = () => {
             {cargando ? 'Enviando...' : 'Enviar sugerencia'}
           </button>
         </form>
-        {respuesta && (
-          <div className="mt-6 p-4 bg-orange-50 border border-orange-300 rounded-xl text-orange-800 text-sm">
-            {respuesta}
+
+        {/* Modal de respuesta */}
+        {mostrarModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full relative">
+              <button
+                onClick={cerrarModal}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <XIcon size={24} />
+              </button>
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold text-orange-600 mb-2">
+                  {respuesta.includes('¡Gracias') ? '¡Éxito!' : 'Atención'}
+                </h3>
+                <p className="text-gray-700">{respuesta}</p>
+                <button
+                  onClick={cerrarModal}
+                  className="mt-4 bg-orange-500 text-white hover:bg-orange-600 px-4 py-2 rounded-lg font-medium"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -6,6 +6,9 @@ import {
   RecursosElectronicosCard,
   RecursosElectronicosGrid,
 } from "../../components";
+import axios from "axios";
+const BASE_URL_C = import.meta.env.VITE_API_URL_Categorias_Recursos_Electronicos;
+const BASE_URL_R = import.meta.env.VITE_API_URL_Recursos_Electronicos;
 
 type RelacionCategoriaRecurso = {
   ID_Rel_Categorias_Recursos_Electronicos: string;
@@ -43,28 +46,26 @@ export const CategoriaPage = () => {
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
 
   // Verificar si la categoría existe y está activa
-  useEffect(() => {
-    if (!id_categoria) return;
+useEffect(() => {
+  if (!id_categoria) return;
 
-    setLoadingCategoria(true);
+  setLoadingCategoria(true);
 
-    fetch(`http://localhost:4000/api/categorias-recursos-electronicos/get-categoria/${id_categoria}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        return res.json();
-      })
-      .then((data: Categoria) => {
-        if (!data.Activo) {
-          navigate("/", { replace: true });
-          return;
-        }
-        setCategoria(data);
-        setLoadingCategoria(false);
-      })
-      .catch(() => {
-        navigate("/", { replace: true }); // Si no existe, también redirige
-      });
-  }, [id_categoria, navigate]);
+  axios
+    .get(`${BASE_URL_C}/get-categoria/${id_categoria}`)
+    .then(({ data }: { data: Categoria }) => {
+      if (!data.Activo) {
+        navigate('/', { replace: true });
+        return;
+      }
+      setCategoria(data);
+      setLoadingCategoria(false);
+    })
+    .catch((error) => {
+      console.error('Error al obtener la categoría:', error);
+      navigate('/', { replace: true });
+    });
+}, [id_categoria, navigate]);
 
   // Obtener recursos electrónicos de la categoría
   useEffect(() => {
@@ -73,23 +74,19 @@ export const CategoriaPage = () => {
     setLoadingRecursos(true);
     setErrorRecursos(null);
 
-    fetch(`http://localhost:4000/api/recursos-electronicos/get-recursos/${id_categoria}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`Error ${res.status}: ${errorText}`);
-        }
-        return res.json();
-      })
-      .then((data: RelacionCategoriaRecurso[]) => {
+    axios
+      .get(`${BASE_URL_R}/get-recursos/${id_categoria}`)
+      .then(({ data }: { data: RelacionCategoriaRecurso[] }) => {
         setRelaciones(data);
         setLoadingRecursos(false);
       })
-      .catch((err) => {
-        setErrorRecursos(err.message || "Error al cargar recursos");
+      .catch((error) => {
+        console.error('Error al obtener los recursos electrónicos:', error);
+        setErrorRecursos(error.message || "Error al cargar recursos");
         setLoadingRecursos(false);
       });
   }, [id_categoria]);
+   
 
   const nombreCategoria = categoria?.Nombre || "Categoría";
 
@@ -113,7 +110,7 @@ export const CategoriaPage = () => {
                   key={recurso.ID_Recurso_Electronico}
                   title={recurso.Nombre}
                   description={recurso.Descripcion}
-                  image={`http://localhost:4000${recurso.Imagen_URL}`}
+                  image={`${import.meta.env.VITE_API_URL}${recurso.Imagen_URL}`}
                   siteLink={recurso.Enlace_Pagina}
                   index={index}
                   expandedCardIndex={expandedCardIndex}
