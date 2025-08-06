@@ -7,7 +7,9 @@
   box-sizing: border-box;
   color: #1f2937;
 }
-
+.intro-text .centered-text{
+  text-align: justify;
+}
 /* ============ SECCIÓN INTRODUCTORIA ============ */
 .intro-section {
   background: linear-gradient(135deg, #fff7ed 0%, #fde68a 100%);
@@ -15,6 +17,7 @@
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   margin: 2rem 0;
+  text-align: justify;
 }
 
 .intro-content {

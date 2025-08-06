@@ -30,11 +30,7 @@
   background: var(--secondary-color);
   color: var(--text-color-light);
   padding: 20px;
-  position: sticky;
   box-shadow: 2px 0 10px var(--box-shadow-light);
-  top: 0;
-  height: 100vh;
-  overflow-y: auto; /* Permite scroll interno si es necesario */
 }
 
 .admin-sidebar h2 {
@@ -67,49 +63,14 @@
   background: var(--bg-dark-gray);
 }
 
+
 .admin-content {
-  flex-grow: 1;
-  padding: 30px;
-  background-color: #ffffff;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto; /* Permite que SÓLO esta área se desplace */
+  padding: 2rem;
 }
 
-@media (max-width: 1000px) {
-  .admin-panel {
-    /* Cambiamos la dirección para que el contenido se ponga debajo del panel */
-    flex-direction: column;
-  }
-
-  .admin-sidebar {
-    /* El panel ya no será una barra lateral fija */
-    position: static; /* Quitamos el 'sticky' */
-    width: 100%;      /* Ocupará todo el ancho */
-    height: auto;     /* La altura será automática, según su contenido */
-    border-right: none; /* Quitamos el borde derecho */
-    border-bottom: 1px solid #ddd; /* Añadimos un borde inferior */
-  }
-
-  .admin-content {
-    padding: 20px; /* Reducimos un poco el padding para pantallas pequeñas */
-  }
-
-  .admin-sidebar nav {
-    /* Opcional: para móviles, puedes querer los botones en horizontal */
-    flex-direction: row;
-    justify-content: center; /* Centra los botones */
-    flex-wrap: wrap; /* Permite que pasen a la siguiente línea si no caben */
-    flex-grow: 0; /* Reseteamos el crecimiento */
-  }
-
-  .admin-sidebar nav button {
-    flex: 1; /* Ocupan espacio equitativo */
-    text-align: center; /* Centramos el texto del botón */
-    min-width: 120px; /* Ancho mínimo para cada botón */
-  }
-
-  .logout-button {
-      margin-top: 15px; /* Ajustamos el margen superior */
-  }
-}
 
 /* Estilos para la sección de recursos */
 .recursos-admin {
@@ -131,15 +92,6 @@
   font-size: 0.95rem;
 }
 
-.admin-sidebar nav button:hover {
-  background-color: #e9e9f2;
-}
-
-.admin-sidebar nav button.active {
-  background-color: #007bff;
-  color: white;
-  font-weight: bold;
-}
 
 .recursos-content {
   flex: 1;

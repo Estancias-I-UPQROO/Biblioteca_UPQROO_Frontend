@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // NUEVO: Importa useNavigate para la redirección
+import { Link, useNavigate } from 'react-router-dom'; // NUEVO: Importa useNavigate para la redirección
 import Slider from 'react-slick';
 import type { Settings } from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -7,7 +7,8 @@ import 'slick-carousel/slick/slick-theme.css';
 import './styles.css';
 import axios from 'axios';
 import Acceso_Biblioteca from '../../../public/Como_acceder.png'; 
-import Novedades from '../../../public/novedades.jpg'; 
+import Novedades from '../../../public/novedades.jpeg'; 
+import Pearson from '../../../public/Pearson.jpeg'; 
 
 const BASE_URL_S = import.meta.env.VITE_API_URL_Silder;
 const BASE_URL_E = import.meta.env.VITE_API_URL_Eventos;
@@ -92,7 +93,7 @@ export const InicioPage = () => {
     pauseOnHover: false
   };
 
-  const totalItems = 2 + inicioEventos.length;
+  const totalItems = 3 + inicioEventos.length;
 
   const slidesToShowValue = Math.min(3, totalItems);
 
@@ -176,12 +177,26 @@ export const InicioPage = () => {
             onClick={() => navigate('/recursos-electronicos/e30f1e48-c61e-4635-a1f3-ab66cd108500')}
           >
             <img 
-              src={Novedades} // Puedes usar otra imagen
+              src={Novedades} 
               alt="Novedades"
             />
             <div className="slider-hover-box">
               <h3>Novedades</h3>
               <p>Haz clic para explorar las novedades.</p>
+            </div>
+          
+          </div>
+          <div
+            className="slider-card"
+            onClick={() => window.open('https://login.vitalsource.com/?context=bookshelf&redirect_uri=https%3A%2F%2Fupqroo.vitalsource.com%2Fhome%2Fexplore%3Fcontext_token%3Df3022c70-5522-013e-16a2-560b2d3411be%26request_token%3DeyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..Q0QR74wMd2NE6snlQTcwpA.RmPe5z3vW7NYZTomO2EOv6X-INzNQpvTF460KLnYPSWK7ei4Ay-7pr2cSBqFfS71gQFhJiaChbfZMYU8D6awLhnjaFfgctYijChonbd50QkQF5SWQy6iISXrwTEX1NBR1bXlXzzT1cKaGwSMC_1H6cB2263s1NMx-3FIU0HW8_Y.2uTtGUchyL_8d7yE-cCtPg&brand=upqroo.vitalsource.com&method=universal&auth_host=upqroo.vitalsource.com&auth_protocol=https%3A', '_blank')}
+          >
+            <img 
+              src={Pearson} 
+              alt="Pearson"
+            />
+            <div className="slider-hover-box">
+              <h3>Pearson</h3>
+              <p>Haz clic para explorar Pearson.</p>
             </div>
           
           </div>
