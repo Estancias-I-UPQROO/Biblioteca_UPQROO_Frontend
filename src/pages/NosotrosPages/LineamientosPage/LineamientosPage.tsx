@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { PageHeader } from "../../../components";
 import { FaRegHandshake, FaFilePdf, } from "react-icons/fa";
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -23,7 +22,6 @@ export const LineamientosPage = () => {
     <>
      
       <div className="intro-section">
-        <PageHeader>Lineamientos</PageHeader>
         <div className="intro-split better-layout">
           
           <div className="intro-text centered-text">

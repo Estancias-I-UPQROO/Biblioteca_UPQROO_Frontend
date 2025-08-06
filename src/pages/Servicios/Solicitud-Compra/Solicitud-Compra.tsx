@@ -16,8 +16,17 @@ export const SugerenciasMaterial: React.FC = () => {
   const [cargando, setCargando] = useState(false);
   const [mostrarModal, setMostrarModal] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const { name, value } = e.target;
+  
+    // Validación especial para el año
+    if (name === 'anio_publicacion') {
+      const year = parseInt(value);
+      if (!isNaN(year) && year < 868) {
+        return; // No actualiza si es menor a 868
+      }
+    }
+
     setFormData({
       ...formData,
       [name]: value,
@@ -100,6 +109,7 @@ export const SugerenciasMaterial: React.FC = () => {
               value={formData.matricula}
               onChange={handleMatriculaChange}
               required
+              minLength={9}
               maxLength={9}
               pattern="\d*"
               inputMode="numeric"
@@ -158,11 +168,14 @@ export const SugerenciasMaterial: React.FC = () => {
               name="anio_publicacion"
               value={formData.anio_publicacion}
               onChange={handleChange}
-              min={0}
+              min={868}  // Año mínimo establecido
               max={new Date().getFullYear()}
               className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
-          </div>
+            {formData.anio_publicacion && parseInt(formData.anio_publicacion) < 868 && (
+              <p className="text-red-500 text-sm mt-1">El año mínimo permitido es 868</p>
+            )}
+</div>
           <button
             type="submit"
             disabled={cargando}
