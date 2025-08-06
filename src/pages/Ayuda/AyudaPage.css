@@ -219,3 +219,23 @@
     padding: 1rem 1.5rem;
   }
 }
+
+.plyr--video {
+  border-radius: 12px;
+  background-color: #121212;
+}
+
+
+.video-title {
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color:#f97316;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background-clip: text;
+}

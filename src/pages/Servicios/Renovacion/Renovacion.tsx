@@ -54,7 +54,7 @@ export const Renovacion: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
       });
       setRespuesta(data.mensaje || 'Correo enviado con éxito');
-      setRespuesta('Solicitud de renovación enviada con éxito. Recibirás una confirmación por correo. Tienes 3 días hábiles para devolver el libro a la bibliotecaria.');
+      setRespuesta('Solicitud de renovación enviada con éxito. Recibirás una confirmación por correo. Tienes 3 días hábiles para devolver el libro a la biblioteca.');
       setFormData({ matricula: '', nombre_libro: [''] });
     } catch (error: any) {
       if (error.response?.data) {
@@ -94,6 +94,7 @@ export const Renovacion: React.FC = () => {
               value={formData.matricula}
               onChange={handleMatriculaChange}
               required
+              minLength={9}
               maxLength={9}
               pattern="\d*"
               inputMode="numeric"

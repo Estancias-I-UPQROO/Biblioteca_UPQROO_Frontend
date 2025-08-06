@@ -5,13 +5,10 @@ import 'slick-carousel/slick/slick-theme.css';
 import './Admindash.css';
 import { useResourceForm } from '../../../hooks/useResourceForm';
 import axios from 'axios';
-const BASE_URL_S = import.meta.env.VITE_API_URL_Silder;
-const BASE_URL_E = import.meta.env.VITE_API_URL_Eventos;
-const BASE_URL_C = import.meta.env.VITE_API_URL_Categorias_Recursos_Electronicos;
-const BASE_URL_R = import.meta.env.VITE_API_URL_Recursos_Electronicos;
+
 // Configuración de axios para la API
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // Usa la variable de entorno
+  baseURL: 'http://localhost:4000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -83,7 +80,7 @@ export const AdminPanel = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [editingResource, setEditingResource] = useState<Recurso | null>(null);
   const [showInactiveCategories, setShowInactiveCategories] = useState(false);
-  const [showInactiveResources] = useState(false);
+
   // Hook para el formulario de recursos
   const {
     register,
@@ -97,97 +94,79 @@ export const AdminPanel = () => {
   const watchedImage = watch('image');
 
   // Obtener todas las categorías
+  const fetchCategorias = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/categorias-recursos-electronicos/get-categorias');
 
-const fetchCategorias = async () => {
-  try {
-    setLoading(true);
-    const response = await axios.get(
-      `${BASE_URL_C}/get-categorias?showInactive=${showInactiveCategories}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
+      const categoriasData = response.data.map((cat: any) => ({
+        id: cat.ID_Categoria_Recursos_Electronicos,
+        nombre: cat.Nombre,
+        active: cat.Activo,
+        recursos: []
+      }));
 
-    const categoriasData = response.data.map((cat: any) => ({
-      id: cat.ID_Categoria_Recursos_Electronicos,
-      nombre: cat.Nombre,
-      active: cat.Activo,
-      recursos: cat.recursos || [] // Asegurar que siempre tenga un array
-    }));
+      setCategorias(categoriasData);
 
-    setCategorias(categoriasData);
-
-    // Seleccionar la primera categoría activa solo si no estamos mostrando inactivas
-    if (!showInactiveCategories) {
+      // Establecer la primera categoría activa como activa por defecto
       const primeraCategoriaActiva = categoriasData.find((cat: any) => cat.active);
-      setActiveCategory(primeraCategoriaActiva?.id || null);
+      if (primeraCategoriaActiva) {
+        setActiveCategory(primeraCategoriaActiva.id);
+      }
+    } catch (err) {
+      setError('Error al cargar las categorías');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError('Error al cargar las categorías');
-    console.error(err);
-    
-    // Mostrar error específico si está disponible
-    if (axios.isAxiosError(err)) {
-      setError(err.response?.data?.message || 'Error al cargar categorías');
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Obtener recursos de una categoría específica
-const fetchRecursos = async (categoriaId: string) => {
+  const fetchRecursos = async (categoriaId: string) => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/recursos-electronicos/get-recursos/${categoriaId}`);
+
+      setCategorias(prev => prev.map(cat =>
+        cat.id === categoriaId
+          ? {
+              ...cat,
+              recursos: response.data.map((rel: any) => ({
+                id: rel.Recursos_Electronicos.ID_Recurso_Electronico,
+                title: rel.Recursos_Electronicos.Nombre,
+                description: rel.Recursos_Electronicos.Descripcion,
+                image: `http://localhost:4000${rel.Recursos_Electronicos.Imagen_URL}`,
+                siteLink: rel.Recursos_Electronicos.Enlace_Pagina,
+                active: rel.Recursos_Electronicos.Activo
+              }))
+            }
+          : cat
+      ));
+    } catch (err) {
+      setError('Error al cargar los recursos');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const fetchEventos = async () => {
   try {
-    setLoading(true);
-    const response = await axios.get(
-      `${BASE_URL_R}/get-recursos/${categoriaId}?showInactive=${showInactiveResources}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-
-    setCategorias(prev => prev.map(cat => 
-      cat.id === categoriaId
-        ? {
-            ...cat,
-            recursos: response.data.map((rel: any) => ({
-              id: rel.Recursos_Electronicos.ID_Recurso_Electronico,
-              title: rel.Recursos_Electronicos.Nombre,
-              description: rel.Recursos_Electronicos.Descripcion,
-              image: `${import.meta.env.VITE_API_URL}${rel.Recursos_Electronicos.Imagen_URL}`,
-              siteLink: rel.Recursos_Electronicos.Enlace_Pagina,
-              active: rel.Recursos_Electronicos.Activo
-            }))
-          }
-        : cat
-    ));
-  } catch (err) {
-    setError('Error al cargar los recursos');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-const fetchEventos = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL_E}/get-eventos`);
-    const data = response.data.map((e: any) => ({
-      id: e.ID_Evento,
-      imagen: `${import.meta.env.VITE_API_URL}${e.Imagen_URL}`,
-      titulo: e.Titulo,
-      activo: e.Activo,
-      descripcion: e.Descripcion,
-      botones: (e.SubEventos || []).map((se: any) => ({
-        texto: se.Titulo,
-        imagenAsociada: `${import.meta.env.VITE_API_URL}${se.Imagen_URL}`
-      }))
-    }));
+    const response = await axios.get('http://localhost:4000/api/eventos/get-eventos');
+    const data = response.data.map((e: any) => {
+      return {
+        id: e.ID_Evento,
+        imagen: `http://localhost:4000${e.Imagen_URL}`, // Asegúrate de que esto sea una URL a una imagen
+        titulo: e.Titulo,
+        activo: e.Activo,
+        descripcion: e.Descripcion,
+        botones: (e.SubEventos || []).map((se: any) => ({
+          texto: se.Titulo,
+          imagenAsociada: `http://localhost:4000${se.Imagen_URL}`
+        }))
+      };
+    });
     setEventos(data);
   } catch (err) {
     console.error("Error al obtener eventos:", err);
@@ -236,15 +215,82 @@ const fetchEventos = async () => {
   }, [editingResource, reset]);
 
    // --- HANDLERS PARA LA SECCIÓN INICIO (MANTENIDOS SIN CAMBIOS) ---
-const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files && e.target.files[0]) {
-    const formData = new FormData();
-    formData.append('imagen', e.target.files[0]);
+  const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
+      const formData = new FormData();
+      formData.append('imagen', file);
+
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(
+          'http://localhost:4000/api/slider-hero/add-slider',
+          formData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+
+        // Recargar lista desde el backend (mejor que manejar local)
+        fetchSliderImages();
+      } catch (err) {
+        console.error("Error al subir imagen del slider:", err);
+      }
+    }
+  };
+
+  const handleDeleteHeroImage = async (id: number) => {
 
     try {
       const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:4000/api/slider-hero/delete-slider/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      fetchSliderImages();
+    } catch (err) {
+      console.error("Error al eliminar la imagen:", err);
+    }
+  };
+
+  const fetchSliderImages = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/slider-hero/get-sliders');
+      const data = response.data.map((item: any) => ({
+        id: item.ID_Slider_Hero,
+        url: `http://localhost:4000${item.Imagen_URL}`, // <- Aquí se completa la URL
+        name: item.Imagen_URL.split('/').pop() || 'Imagen'
+      }));
+      setHeroImages(data);
+    } catch (err) {
+      console.error("Error al obtener imágenes del slider:", err);
+    }
+  };
+  
+  // --- HANDLERS PARA EVENTOS ---
+  const subirEvento = async (evento: Partial<Evento>) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+
+    formData.append('Titulo', evento.titulo!);
+    formData.append('Descripcion', evento.descripcion!);
+    if (evento.imagenFile) formData.append('imagen', evento.imagenFile);
+
+    const subeventosData = (evento.botones || []).map(b => ({ Titulo: b.texto }));
+    formData.append('subeventos', JSON.stringify(subeventosData));
+    (evento.botones || []).forEach((b) => {
+      const blob = b.imagenAsociada instanceof File ? b.imagenAsociada : null;
+      if (blob) formData.append('subeventosImages', blob);
+    });
+
+    try {
       await axios.post(
-        `${BASE_URL_S}/add-slider`,
+        'http://localhost:4000/api/eventos/create-evento',
         formData,
         {
           headers: {
@@ -253,74 +299,12 @@ const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
           }
         }
       );
-      fetchSliderImages();
+      fetchEventos(); // refresca
+      setAddingEvento(null);
     } catch (err) {
-      console.error("Error al subir imagen del slider:", err);
+      console.error("Error al crear evento:", err);
     }
-  }
-};
-
-  const handleDeleteHeroImage = async (id: number) => {
-  try {
-    const token = localStorage.getItem('token');
-    await axios.delete(`${BASE_URL_S}/delete-slider/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    fetchSliderImages();
-  } catch (err) {
-    console.error("Error al eliminar la imagen:", err);
-  }
-};
-
-  const fetchSliderImages = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL_S}/get-sliders`);
-    const data = response.data.map((item: any) => ({
-      id: item.ID_Slider_Hero,
-      url: `${import.meta.env.VITE_API_URL}${item.Imagen_URL}`,
-      name: item.Imagen_URL.split('/').pop() || 'Imagen'
-    }));
-    setHeroImages(data);
-  } catch (err) {
-    console.error("Error al obtener imágenes del slider:", err);
-  }
-};
-  
-  // --- HANDLERS PARA EVENTOS ---
-  const subirEvento = async (evento: Partial<Evento>) => {
-  const token = localStorage.getItem('token');
-  const formData = new FormData();
-
-  formData.append('Titulo', evento.titulo!);
-  formData.append('Descripcion', evento.descripcion!);
-  if (evento.imagenFile) formData.append('imagen', evento.imagenFile);
-
-  const subeventosData = (evento.botones || []).map(b => ({ Titulo: b.texto }));
-  formData.append('subeventos', JSON.stringify(subeventosData));
-  (evento.botones || []).forEach((b) => {
-    const blob = b.imagenAsociada instanceof File ? b.imagenAsociada : null;
-    if (blob) formData.append('subeventosImages', blob);
-  });
-
-  try {
-    await axios.post(
-      `${BASE_URL_E}/create-evento`,
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    );
-    fetchEventos();
-    setAddingEvento(null);
-  } catch (err) {
-    console.error("Error al crear evento:", err);
-  }
-};
+  };
 
 
 
@@ -350,42 +334,44 @@ const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
   };
 
   const actualizarEvento = async (evento: Evento) => {
-  const token = localStorage.getItem('token');
-  const formData = new FormData();
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
 
-  formData.append('Titulo', evento.titulo);
-  formData.append('Descripcion', evento.descripcion);
-  if (evento.imagenFile) formData.append('imagen', evento.imagenFile);
-
-  const subeventosData = (evento.botones || []).map((b) => ({
-    Titulo: b.texto,
-    ID_SubEvento: b.ID_SubEvento ?? undefined
-  }));
-  formData.append('subeventos', JSON.stringify(subeventosData));
-
-  (evento.botones || []).forEach((b) => {
-    if (b.imagenAsociada instanceof File) {
-      formData.append('subeventosImages', b.imagenAsociada);
+    formData.append('Titulo', evento.titulo);
+    formData.append('Descripcion', evento.descripcion);
+    if (evento.imagenFile) {
+      formData.append('imagen', evento.imagenFile); // ✅ nombre corregido
     }
-  });
 
-  try {
-    await axios.put(
-      `${BASE_URL_E}/update-evento/${evento.id}`,
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+    const subeventosData = (evento.botones || []).map((b) => ({
+      Titulo: b.texto,
+      ID_SubEvento: b.ID_SubEvento ?? undefined
+    }));
+    formData.append('subeventos', JSON.stringify(subeventosData));
+
+    (evento.botones || []).forEach((b) => {
+      if (b.imagenAsociada instanceof File) {
+        formData.append('subeventosImages', b.imagenAsociada);
       }
-    );
-    fetchEventos();
-    setEditingEvento(null);
-  } catch (err) {
-    console.error("Error al actualizar evento:", err);
-  }
-};
+    });
+
+    try {
+      await axios.put(
+        `http://localhost:4000/api/eventos/update-evento/${evento.id}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      fetchEventos();
+      setEditingEvento(null);
+    } catch (err) {
+      console.error("Error al actualizar evento:", err);
+    }
+  };
 
   const handleUpdateEvento = () => {
     if (editingEvento) {
@@ -393,17 +379,26 @@ const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     }
   };
 
- const handleDeleteEvento = async (id: string) => {
+ const handleDeleteEvento = async (id: string) => { // ¡CAMBIADO A 'string'!
+  console.log(id);
+
   try {
     const token = localStorage.getItem('token');
+    
     await axios.delete(
-      `${BASE_URL_E}/delete-evento/${id}`,
+      // La URL ya espera un string (UUID)
+      `http://localhost:4000/api/eventos/delete-evento/${id}`, 
       { headers: { Authorization: `Bearer ${token}` } }
     );
+
+    // Aquí, 'ev.id' (string) se comparará con 'id' (string) - ¡Correcto!
     setEventos(prevEventos => prevEventos.filter(ev => ev.id !== id));
+
+    // Aquí, 'editingEvento.id' (string) se comparará con 'id' (string) - ¡Correcto!
     if (editingEvento && editingEvento.id === id) {
-      setEditingEvento(null);
+      setEditingEvento(null); 
     }
+
     alert('Evento eliminado correctamente.');
   } catch (err) {
     console.error("Error al eliminar evento:", err);
@@ -510,28 +505,24 @@ const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
   };
 
   const handleEditCategoryName = async (id: string, currentName: string) => {
-  const nuevoNombre = prompt('Editar nombre de la categoría:', currentName);
-  if (!nuevoNombre || !nuevoNombre.trim()) return;
+    const nuevoNombre = prompt('Editar nombre de la categoría:', currentName);
+    if (!nuevoNombre || !nuevoNombre.trim()) return;
 
-  try {
-    setLoading(true);
-    await axios.put(`${BASE_URL_C}/update-categoria/${id}`, {
-      Nombre: nuevoNombre.trim()
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    await fetchCategorias();
-  } catch (err) {
-    setError('Error al actualizar la categoría');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      await api.put(`/categorias-recursos-electronicos/update-categoria/${id}`, {
+        Nombre: nuevoNombre.trim()
+      });
+      await fetchCategorias();
+    } catch (err) {
+      setError('Error al actualizar la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Crear o actualizar un recurso=================================================================================================================================
+  // Crear o actualizar un recurso
   const onResourceSubmit = async (data: Omit<Recurso, 'id' | 'active'>) => {
     if (!activeCategory) return;
 
@@ -551,25 +542,24 @@ const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
 
       if (editingResource) {
         // Editar recurso existente
-        await axios.put(
-          `${BASE_URL_R}/update-recurso/${editingResource.id}`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
+        await api.put(
+        `/recursos-electronicos/update-recurso/${editingResource.id}`, // ✅ solo este
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
       } else {
         // Crear nuevo recurso
-        await axios.post(
-          `${BASE_URL_R}/create-recurso/${activeCategory}`,
+        await api.post(
+          `/recursos-electronicos/create-recurso/${activeCategory}`,
           formData,
           {
             headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+              'Content-Type': 'multipart/form-data'
             }
           }
         );
@@ -588,129 +578,89 @@ const handleHeroImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
 
   // Eliminar (desactivar) un recurso
   const handleDeleteResource = async (id: string) => {
-  try {
-    setLoading(true);
-    setError('');
-    await axios.patch(
-      `${BASE_URL_R}/delete-recurso/${id}`,
-      {},
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-    await fetchRecursos(activeCategory!);
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/recursos-electronicos/delete-recurso/${id}`);
+      await fetchRecursos(activeCategory!);
 
-    if (editingResource && editingResource.id === id) {
-      setEditingResource(null);
-      reset();
+      if (editingResource && editingResource.id === id) {
+        setEditingResource(null);
+        reset();
+      }
+    } catch (err) {
+      setError('Error al eliminar el recurso');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError('Error al eliminar el recurso');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Restaurar (activar) un recurso
   const handleRestoreResource = async (id: string) => {
-  try {
-    setLoading(true);
-    setError('');
-    await axios.patch(
-      `${BASE_URL_R}/restore-recurso/${id}`,
-      {},
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-    await fetchRecursos(activeCategory!);
-  } catch (err) {
-    setError('Error al restaurar el recurso');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/recursos-electronicos/restore-recurso/${id}`);
+      await fetchRecursos(activeCategory!);
+    } catch (err) {
+      setError('Error al restaurar el recurso');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Crear una nueva categoría
   const handleCreateCategory = async (nombre: string) => {
-  try {
-    setLoading(true);
-    setError('');
-    await axios.post(
-      `${BASE_URL_C}/create-categoria`,
-      { Nombre: nombre },
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    await fetchCategorias();
-  } catch (err) {
-    setError('Error al crear la categoría');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      setError('');
+      await api.post('/categorias-recursos-electronicos/create-categoria', { Nombre: nombre });
+      await fetchCategorias();
+    } catch (err) {
+      setError('Error al crear la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Eliminar (desactivar) una categoría
   const handleDeleteCategory = async (id: string) => {
-  try {
-    setLoading(true);
-    setError('');
-    await axios.patch(
-      `${BASE_URL_C}/delete-categoria/${id}`,
-      {},
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-    await fetchCategorias();
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/categorias-recursos-electronicos/delete-categoria/${id}`);
+      await fetchCategorias();
 
-    if (activeCategory === id) {
-      const nuevaCategoriaActiva = categorias.find(cat => cat.id !== id && cat.active);
-      setActiveCategory(nuevaCategoriaActiva?.id || null);
+      // Si la categoría activa fue eliminada, seleccionar otra
+      if (activeCategory === id) {
+        const nuevaCategoriaActiva = categorias.find(cat => cat.id !== id && cat.active);
+        setActiveCategory(nuevaCategoriaActiva?.id || null);
+      }
+    } catch (err) {
+      setError('Error al eliminar la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError('Error al eliminar la categoría');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Restaurar (activar) una categoría
   const handleRestoreCategory = async (id: string) => {
-  try {
-    setLoading(true);
-    setError('');
-    await axios.patch(
-      `${BASE_URL_C}/restore-categoria/${id}`,
-      {},
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-    await fetchCategorias();
-  } catch (err) {
-    setError('Error al restaurar la categoría');
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      setError('');
+      await api.patch(`/categorias-recursos-electronicos/restore-categoria/${id}`);
+      await fetchCategorias();
+    } catch (err) {
+      setError('Error al restaurar la categoría');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Configuraciones para los sliders
   const settingsHero = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1, autoplay: true, fade: true, arrows: false };

@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // NUEVO: Importa useNavigate para la redirección
 import Slider from 'react-slick';
 import type { Settings } from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './styles.css';
 import axios from 'axios';
+import Acceso_Biblioteca from '../../../public/Como_acceder.png'; 
+import Novedades from '../../../public/novedades.jpg'; 
+
 const BASE_URL_S = import.meta.env.VITE_API_URL_Silder;
 const BASE_URL_E = import.meta.env.VITE_API_URL_Eventos;
 
@@ -25,10 +29,9 @@ interface Evento {
   Activo: boolean;
   createdAt: string;
   updatedAt: string;
-  SubEventos?: SubEvento[]; // opcional para contemplar que no siempre existan
+  SubEventos?: SubEvento[];
 }
 
-// Hero slider
 interface Hero {
   ID_Slider_Hero: string;
   Imagen_URL: string;
@@ -37,23 +40,22 @@ interface Hero {
 export const InicioPage = () => {
   const [imagenesHero, setImagenesHero] = useState<Hero[]>([]);
   const [inicioEventos, setInicioEventos] = useState<Evento[]>([]);
+  const navigate = useNavigate(); // NUEVO: Inicializa el hook de navegación
 
- useEffect(() => {
+  useEffect(() => {
     const obtenerImagenesHero = async () => {
       try {
         const { data } = await axios.get(`${BASE_URL_S}/get-sliders`);
-        setImagenesHero(data); // Asignas directamente
+        setImagenesHero(data);
       } catch (error) {
         console.error('Error cargando imágenes del hero:', error);
         setImagenesHero([]);
       }
     };
-
     obtenerImagenesHero();
   }, []);
 
-
-   useEffect(() => {
+  useEffect(() => {
     const obtenerEventos = async () => {
       try {
         const { data } = await axios.get(`${BASE_URL_E}/get-eventos`);
@@ -63,10 +65,15 @@ export const InicioPage = () => {
         setInicioEventos([]);
       }
     };
-
     obtenerEventos();
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(null);
@@ -85,18 +92,22 @@ export const InicioPage = () => {
     pauseOnHover: false
   };
 
+  const totalItems = 2 + inicioEventos.length;
+
+  const slidesToShowValue = Math.min(3, totalItems);
+
   const settingsJustinMind: Settings = {
     dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 3,
+    slidesToShow: slidesToShowValue,
     slidesToScroll: 1,
     arrows: true,
     lazyLoad: 'ondemand',
     responsive: [
       {
         breakpoint: 1024,
-        settings: { slidesToShow: 2 }
+        settings: { slidesToShow: Math.min(2, totalItems) }
       },
       {
         breakpoint: 600,
@@ -129,9 +140,6 @@ export const InicioPage = () => {
           <h1>BIBLIOTECA VIRTUAL KAXÁANT</h1>
           <h2>UNIVERSIDAD POLITÉCNICA DE QUINTANA ROO</h2>
         </div>
-
-
-        {/* Slider de imágenes del hero */}
         <Slider {...settingsHero} className="hero-slider">
           {imagenesHero.map((src, idx) => (
             <div key={idx} className="slide-biblio">
@@ -145,15 +153,46 @@ export const InicioPage = () => {
         </Slider>
       </section>
 
-
       {/* Carrusel de Eventos */}
       <section className="slider-jmind">
         <Slider {...settingsJustinMind} className="slider-container">
+        
+         <div
+            className="slider-card"
+            onClick={() => navigate('/ayuda')} // Corregido a minúsculas para coincidir con la ruta
+          >
+            <img 
+              src={Acceso_Biblioteca} 
+              alt="Cómo usar la Biblioteca"
+            />
+            <div className="slider-hover-box">
+              <h3>¿Cómo usar la Biblioteca?</h3>
+              <p>Haz clic para ir a la página de ayuda.</p>
+            </div>
+          </div>
+
+          <div
+            className="slider-card"
+            onClick={() => navigate('/recursos-electronicos/e30f1e48-c61e-4635-a1f3-ab66cd108500')}
+          >
+            <img 
+              src={Novedades} // Puedes usar otra imagen
+              alt="Novedades"
+            />
+            <div className="slider-hover-box">
+              <h3>Novedades</h3>
+              <p>Haz clic para explorar las novedades.</p>
+            </div>
+          
+          </div>
+
+          {/* Cards dinámicas que vienen del backend */}
           {inicioEventos.map((evento) => (
             <div
               key={evento.ID_Evento}
               className="slider-card"
-              onClick={() => abrirModal(evento)}>
+              onClick={() => abrirModal(evento)}
+            >
               <img 
                 src={`${import.meta.env.VITE_API_URL}${evento.Imagen_URL}`} 
                 alt={evento.Titulo}  
@@ -167,18 +206,17 @@ export const InicioPage = () => {
         </Slider>
       </section>
 
-      {/* Modal */}
+      {/* Modal (sin cambios) */}
       {modalAbierto && eventoSeleccionado && (
         <div className="modal-overlay" onClick={cerrarModal}>
           <div className="modal-contenido" onClick={e => e.stopPropagation()}>
             <button className="modal-cerrar" onClick={cerrarModal}>&times;</button>
             <div className="modal-imagen-container">
-           <img
-              src={imagenActual?.startsWith('http') ? imagenActual : `${import.meta.env.VITE_API_URL}${imagenActual || eventoSeleccionado.Imagen_URL}`}
-              alt={eventoSeleccionado.Titulo}
-              className="modal-imagen-fullscreen"
-            />
-
+              <img
+                src={imagenActual?.startsWith('http') ? imagenActual : `${import.meta.env.VITE_API_URL}${imagenActual || eventoSeleccionado.Imagen_URL}`}
+                alt={eventoSeleccionado.Titulo}
+                className="modal-imagen-fullscreen"
+              />
             </div>
             <div className="modal-texto">
               <h3>{eventoSeleccionado.Titulo}</h3>

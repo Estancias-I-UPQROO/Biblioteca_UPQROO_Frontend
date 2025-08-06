@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { PageHeader } from "../../components";
 import './Catalogo.css';
 
 export const Catalogo = () => {
@@ -22,7 +21,6 @@ export const Catalogo = () => {
 
   return (
     <>
-      <PageHeader>Catálogo de la Biblioteca</PageHeader>
     <div className="catalogo-container">
      
     

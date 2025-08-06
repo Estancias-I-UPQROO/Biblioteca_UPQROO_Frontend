@@ -150,7 +150,11 @@ body {
 .slider-container .slick-slide {
   padding: 0 10px;
 }
-
+.slider-container .slick-track {
+  /* Forzamos a que siempre sea un contenedor flexible */
+  display: flex !important; 
+  align-items: center !important; /* Alinea verticalmente por si tienen alturas distintas */
+}
 .slider-card {
   position: relative;
   border-radius: 12px;

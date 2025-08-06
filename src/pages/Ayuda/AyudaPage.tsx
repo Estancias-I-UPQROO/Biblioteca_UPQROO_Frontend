@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
-import { PageHeader } from '../../components';
-import { FaFilePdf, FaDownload, } from 'react-icons/fa';
+import { FaFilePdf, FaDownload } from 'react-icons/fa';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
+import Plyr from 'plyr-react';
+import 'plyr-react/plyr.css';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import './AyudaPage.css';
 
 export const AyudaPage = () => {
   const [activePdf, setActivePdf] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' // Puedes usar 'auto' para un scroll instantáneo
+    });
+  }, []);
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -34,8 +40,37 @@ export const AyudaPage = () => {
 
   return (
     <>
-      <PageHeader>Ayuda</PageHeader>
       <div className="ayuda-container">
+
+        <div className="video-section" style={{ marginBottom: '2rem' }}>
+          <h1 className="video-title">¿Cómo acceder a la biblioteca?</h1>
+          <div style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <Plyr
+              source={{
+                type: 'video',
+                sources: [
+                  {
+                    src: '/Como_acceder.mp4',
+                    type: 'video/mp4',
+                  },
+                ],
+              }}
+              options={{
+                controls: [
+                  'play',
+                  'progress',
+                  'current-time',
+                  'mute',
+                  'volume',
+                  'fullscreen',
+                ],
+                autoplay: false,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Sección de PDF */}
         <div className="pdf-viewer-container">
           <div className="pdf-header">
             <h2>{pdfs[activePdf].title}</h2>
@@ -63,7 +98,13 @@ export const AyudaPage = () => {
 
           <div className="pdf-viewer">
             <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-              <div style={{ height: isMobile ? '60vh' : '80vh', border: '1px solid #ccc', borderRadius: '8px' }}>
+              <div
+                style={{
+                  height: isMobile ? '60vh' : '80vh',
+                  border: '1px solid #ccc',
+                  borderRadius: '8px',
+                }}
+              >
                 <Viewer fileUrl={pdfs[activePdf].file} />
               </div>
             </Worker>

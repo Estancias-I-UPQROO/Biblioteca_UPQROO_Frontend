@@ -1,5 +1,4 @@
 import React from 'react';
-import { PageHeader } from '../../components';
 import {
   BookOpenIcon,
   LaptopIcon,
@@ -12,7 +11,6 @@ import { Link } from 'react-router-dom';
 export const ServiciosBiblioteca: React.FC = () => {
   return (
     <>
-      <PageHeader>Servicios</PageHeader>
       <section className="min-h-screen bg-white text-gray-900 px-6 py-14 font-['Inter']">
         <div className="max-w-7xl mx-auto">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-2 mb-10">
@@ -28,7 +26,7 @@ export const ServiciosBiblioteca: React.FC = () => {
           </div>
         </div>
       </section>
-    </> 
+    </>
   );
 };
 
@@ -42,43 +40,43 @@ type ServiceCardProps = {
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ icon: Icon, title, description, link, bgImage }) => {
   const hasImageBg = !!bgImage;
-  
+
   return (
     <div className={`
-      relative border border-orange-50 hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden 
+      relative border border-orange-50 hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden
       flex flex-col h-full shadow-sm ${hasImageBg ? '' : 'bg-white'}
     `}>
       {/* Fondo con imagen */}
       {bgImage && (
         <div className="absolute inset-0 z-0">
-          <img 
-            src={bgImage} 
-            alt="" 
+          <img
+            src={bgImage}
+            alt=""
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/30"></div>
         </div>
       )}
-      
+
       {/* Contenido */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* Encabezado con estilo original */}
+        {/* Encabezado */}
         <div className="flex items-center gap-3 p-5 bg-orange-50">
           <Icon className="w-6 h-6 text-orange-500" />
           <h2 className="text-lg font-bold text-orange-600">{title}</h2>
         </div>
-        
-        {/* Área de descripción adaptada */}
+
+        {/* Área de descripción */}
         <div className={`
-          flex-grow px-5 py-4 text-sm leading-relaxed 
-          ${hasImageBg ? 
-            'text-white bg-black/20 backdrop-blur-[1px]' : 
+          flex-grow px-5 py-4 text-sm leading-relaxed
+          ${hasImageBg ?
+            'text-white bg-black/20 backdrop-blur-[1px]' :
             'text-gray-700 bg-white'
           }
         `}>
           {description}
         </div>
-        
+
         {link && (
           <div className={`p-5 mt-auto ${hasImageBg ? 'bg-black/20' : 'bg-white'}`}>
             <Link
@@ -119,7 +117,7 @@ const cards = [
       </div>
     ),
     link: null,
-    bgImage: 'computo.jpg'
+    bgImage: '/computo.jpg'
   },
   {
     icon: BookOpenIcon,
@@ -131,7 +129,7 @@ const cards = [
       </div>
     ),
     link: null,
-    bgImage: 'formacion.jpg'
+    bgImage: '/formacion.jpg'
   },
   {
     icon: RefreshCwIcon,
@@ -143,7 +141,7 @@ const cards = [
       </div>
     ),
     link: '/renovacion',
-    bgImage: null
+    bgImage: '/Renovacion.png'
   },
   {
     icon: MessageSquareIcon,
@@ -155,6 +153,6 @@ const cards = [
       </div>
     ),
     link: '/solicitud-compra',
-    bgImage: null
+    bgImage: '/Solicitud.png'
   },
 ];
