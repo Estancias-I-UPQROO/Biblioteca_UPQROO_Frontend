@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // NUEVO: Importa useNavigate para la redirección
+import { useNavigate } from 'react-router-dom'; 
 import Slider from 'react-slick';
 import type { Settings } from 'react-slick';
 import 'slick-carousel/slick/slick.css';
